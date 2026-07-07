@@ -25,6 +25,16 @@ app.include_router(analysis.router)
 from src.api.routes import admin
 app.include_router(admin.router)
 
+@app.get("/")
+async def root():
+    return {
+        "message": "Bienvenue sur JobbersFind AI Trust Engine (JITSE)",
+        "version": "1.0.0",
+        "status": "online",
+        "documentation": "/docs",
+        "health": "/health"
+    }
+
 @app.get("/health")
 async def health_check():
     """Vérifie que l'API est saine."""
