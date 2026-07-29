@@ -1,3 +1,10 @@
-from src.api.main import app
+import sys
+from pathlib import Path
 
-# Vercel s'attend à trouver l'application (ASGI) dans ce fichier pour le routage Serverless.
+# Ajoute le dossier racine du projet au path Python pour pouvoir importer 'src'
+file_dir = Path(__file__).resolve().parent
+root_dir = file_dir.parent
+sys.path.append(str(root_dir))
+
+# Importation de votre application FastAPI principale
+from src.api.main import app
