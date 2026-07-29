@@ -4,786 +4,650 @@ Contient le code HTML, CSS et JS pour l'interface de JITSE.
 Intègre le système d'authentification IAM avec workflow de validation Admin.
 """
 
+# dashbord_view.py
+
 DASHBOARD_HTML = """
 <!DOCTYPE html>
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JITSE - JobbersFind Intelligent Trust Engine</title>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <title>JITSE AI - Simuler & Vérifier un Profil</title>
+    <!-- FontAwesome & Fonts -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <style>
         :root {
-            --primary: #6366f1;
-            --primary-glow: rgba(99, 102, 241, 0.5);
-            --secondary: #ec4899;
-            --secondary-glow: rgba(236, 72, 153, 0.5);
-            --bg: #0f111a;
-            --bg-panel: rgba(255, 255, 255, 0.03);
-            --bg-panel-hover: rgba(255, 255, 255, 0.06);
-            --border: rgba(255, 255, 255, 0.08);
-            --text: #f8fafc;
+            --bg-dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --primary: #3b82f6;
+            --primary-hover: #2563eb;
+            --secondary: #8b5cf6;
+            --accent: #06b6d4;
+            --text-main: #f8fafc;
             --text-muted: #94a3b8;
+            --danger: #ef4444;
             --success: #10b981;
             --warning: #f59e0b;
-            --danger: #ef4444;
         }
 
         * {
+            box-sizing: border-box;
             margin: 0;
             padding: 0;
-            box-sizing: border-box;
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
         body {
-            background-color: var(--bg);
-            color: var(--text);
-            min-height: 100vh;
-            overflow-x: hidden;
-            display: flex;
+            background-color: var(--bg-dark);
             background-image: 
-                radial-gradient(circle at 15% 50%, rgba(99, 102, 241, 0.15), transparent 25%),
-                radial-gradient(circle at 85% 30%, rgba(236, 72, 153, 0.15), transparent 25%);
-            background-size: 100% 100%;
-            background-attachment: fixed;
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.15) 0px, transparent 50%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* --- AUTHENTICATION SCREEN --- */
+        /* --- AUTH SCREEN --- */
         #auth-screen {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(15, 17, 26, 0.95);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            z-index: 1000;
             display: flex;
             align-items: center;
             justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
         }
-        .auth-box {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border);
+
+        .auth-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
             border-radius: 24px;
-            padding: 3rem;
+            padding: 40px;
             width: 100%;
-            max-width: 450px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
-            text-align: center;
+            max-width: 440px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
         }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .auth-header i {
+            font-size: 2.5rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
         .auth-tabs {
             display: flex;
-            margin-bottom: 2rem;
-            border-bottom: 1px solid var(--border);
+            background: rgba(15, 23, 42, 0.6);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 24px;
         }
+
         .auth-tab {
             flex: 1;
-            padding: 1rem;
+            padding: 10px;
+            text-align: center;
             cursor: pointer;
-            color: var(--text-muted);
+            border-radius: 8px;
             font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-muted);
             transition: all 0.3s ease;
         }
+
         .auth-tab.active {
-            color: var(--primary);
-            border-bottom: 3px solid var(--primary);
-        }
-        #login-error, #reg-msg, #pwd-msg {
-            margin-bottom: 1rem;
-            font-size: 0.9rem;
-            font-weight: 500;
+            background: var(--primary);
+            color: white;
         }
 
-        /* --- LAYOUT COMPONENT --- */
+        /* --- APP LAYOUT --- */
         #app-layout {
-            display: none; /* Hidden until logged in */
-            width: 100%;
-            display: flex;
+            display: none;
+            flex: 1;
         }
 
-        .sidebar {
-            width: 280px;
-            background: rgba(15, 17, 26, 0.7);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-right: 1px solid var(--border);
-            padding: 2rem 1.5rem;
+        sidebar {
+            width: 260px;
+            background: rgba(15, 23, 42, 0.8);
+            border-right: 1px solid var(--card-border);
+            padding: 24px 16px;
             display: flex;
             flex-direction: column;
-            gap: 2rem;
-            z-index: 10;
+            gap: 20px;
         }
 
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 800;
+        .brand {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            gap: 12px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-main);
+            padding: 0 12px;
         }
 
         .nav-item {
-            padding: 1rem 1.25rem;
-            border-radius: 12px;
-            color: var(--text-muted);
-            text-decoration: none;
             display: flex;
             align-items: center;
-            gap: 1rem;
-            font-weight: 500;
-            transition: all 0.3s ease;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 12px;
+            color: var(--text-muted);
             cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            font-weight: 500;
         }
 
         .nav-item:hover, .nav-item.active {
-            background: var(--bg-panel-hover);
-            color: var(--text);
-            transform: translateX(5px);
-        }
-
-        .nav-item.active {
-            border: 1px solid var(--border);
             background: rgba(255, 255, 255, 0.05);
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 0 0 1px var(--border);
+            color: var(--primary);
         }
 
-        .main-content {
+        main {
             flex: 1;
-            padding: 2rem 3rem;
-            display: flex;
-            flex-direction: column;
-            gap: 2rem;
-            height: 100vh;
+            padding: 32px;
             overflow-y: auto;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .header h1 {
-            font-size: 2rem;
-            font-weight: 700;
-        }
-
-        .status-badge {
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--success);
-            padding: 0.5rem 1rem;
-            border-radius: 20px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            border: 1px solid rgba(16, 185, 129, 0.2);
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         .glass-panel {
-            background: var(--bg-panel);
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            padding: 2.5rem;
+            background: var(--card-bg);
             backdrop-filter: blur(12px);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
-            display: none; /* All sections hidden by default */
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 28px;
+            margin-bottom: 24px;
         }
 
-        .section-title {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 2rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        /* --- FORMS & UPLOADS --- */
+        /* --- FORMS & INPUTS --- */
         .form-group {
-            margin-bottom: 1.5rem;
-            text-align: left;
-        }
-        
-        .upload-zone {
-            border: 2px dashed var(--border);
-            border-radius: 12px;
-            padding: 1.5rem;
-            text-align: center;
-            background: rgba(0,0,0,0.2);
-            transition: all 0.3s ease;
-            cursor: pointer;
-            margin-bottom: 0.5rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
-        .upload-zone:hover {
-            border-color: var(--primary);
-            background: rgba(99, 102, 241, 0.05);
-        }
-        .upload-zone i {
-            font-size: 2rem;
-            color: var(--primary);
-            margin-bottom: 0.5rem;
-        }
-        .upload-zone p {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-        }
-        
-        .form-label {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-            color: var(--text-muted);
-            font-weight: 500;
-            font-size: 0.9rem;
+            margin-bottom: 20px;
         }
 
-        .form-label .badge-bonus {
-            background: rgba(16, 185, 129, 0.2);
-            color: var(--success);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.7rem;
-            font-weight: bold;
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-muted);
         }
 
-        .form-control {
+        input[type="text"],
+        input[type="email"],
+        input[type="password"],
+        select,
+        textarea {
             width: 100%;
-            background: rgba(0,0,0,0.2);
-            border: 1px solid var(--border);
-            color: var(--text);
-            padding: 1rem 1.25rem;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border);
             border-radius: 12px;
-            font-size: 1rem;
-            transition: all 0.3s ease;
+            color: var(--text-main);
             outline: none;
-        }
-        .form-control:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px var(--primary-glow);
+            transition: border-color 0.2s;
         }
 
-        .btn {
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            color: white;
-            border: none;
-            padding: 1rem 2rem;
-            border-radius: 12px;
-            font-size: 1rem;
-            font-weight: 700;
+        input:focus, select:focus, textarea:focus {
+            border-color: var(--primary);
+        }
+
+        .file-upload-box {
+            border: 2px dashed var(--card-border);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
             cursor: pointer;
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 15px var(--primary-glow);
-            width: 100%;
+            background: rgba(15, 23, 42, 0.3);
+            transition: all 0.2s;
+        }
+
+        .file-upload-box:hover {
+            border-color: var(--primary);
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        .file-preview-container {
             display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 0.75rem;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 10px;
         }
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px var(--primary-glow);
-        }
-        .btn-small {
-            padding: 0.5rem 1rem;
-            font-size: 0.9rem;
-            width: auto;
+
+        .file-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 6px 12px;
             border-radius: 8px;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .file-item img {
+            width: 24px;
+            height: 24px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .btn-primary {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        /* --- RESULTS DISPLAY --- */
+        .score-display-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .circular-progress {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: conic-gradient(var(--primary) calc(var(--percentage) * 1%), rgba(255, 255, 255, 0.1) 0);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .circular-progress::before {
+            content: "";
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: var(--bg-dark);
+        }
+
+        .score-value {
+            position: relative;
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+
+        .metric-card {
+            background: rgba(15, 23, 42, 0.4);
+            border: 1px solid var(--card-border);
+            padding: 16px;
+            border-radius: 12px;
+        }
+
+        .metric-title {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .metric-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-top: 4px;
         }
 
         /* --- ADMIN LIST --- */
         .admin-list {
             list-style: none;
-            margin-top: 1rem;
         }
+
         .admin-list li {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border);
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1rem;
-        }
-        .btn-approve {
-            background: rgba(16, 185, 129, 0.15);
-            color: var(--success);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            padding: 0.5rem 1.5rem;
+            padding: 12px 16px;
+            background: rgba(15, 23, 42, 0.4);
             border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
+            margin-bottom: 8px;
         }
-        .btn-approve:hover {
+
+        .btn-approve {
             background: var(--success);
             color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
         }
 
-        /* --- PORTFOLIO RESULTS --- */
-        .passport-result {
-            display: none;
-            margin-top: 2rem;
-            animation: fadeIn 0.5s ease;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .score-circle {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            background: conic-gradient(var(--success) var(--percentage), rgba(255,255,255,0.1) 0);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            margin: 0 auto 2rem;
-        }
-        .score-circle::before {
-            content: '';
-            position: absolute;
-            width: 120px;
-            height: 120px;
-            background: var(--bg);
-            border-radius: 50%;
-        }
-        .score-value {
-            position: relative;
-            font-size: 2.5rem;
-            font-weight: 800;
-            z-index: 1;
-        }
-
-        .grid-2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1.5rem;
-        }
-
-        .badge-list { list-style: none; }
-        .badge-item {
-            padding: 1rem;
-            background: rgba(255,255,255,0.03);
-            border-radius: 12px;
-            margin-bottom: 0.75rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border: 1px solid var(--border);
-        }
-
-        .ai-recommendation {
-            margin-top: 2rem;
-            padding: 1.5rem;
-            background: rgba(99, 102, 241, 0.1);
-            border-left: 4px solid var(--primary);
-            border-radius: 0 12px 12px 0;
-            font-style: italic;
-            line-height: 1.6;
-        }
-
+        /* Spinner */
         .spinner {
-            display: none;
-            width: 24px;
-            height: 24px;
-            border: 3px solid rgba(255,255,255,0.3);
+            border: 3px solid rgba(255, 255, 255, 0.3);
             border-radius: 50%;
-            border-top-color: white;
-            animation: spin 1s ease-in-out infinite;
+            border-top: 3px solid white;
+            width: 18px;
+            height: 18px;
+            animation: spin 1s linear infinite;
+            display: none;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
 
-        .file-preview {
-            display: flex;
-            gap: 0.5rem;
-            flex-wrap: wrap;
-            margin-top: 1rem;
-        }
-        .file-item {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--border);
-            padding: 0.5rem;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.8rem;
-        }
-        .file-item img {
-            width: 40px;
-            height: 40px;
-            object-fit: cover;
-            border-radius: 4px;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
 <body>
 
-    <!-- AUTHENTICATION SCREEN -->
+    <!-- SECTION AUTHENTIFICATION -->
     <div id="auth-screen">
-        <div class="auth-box">
-            <div class="logo" style="justify-content:center; margin-bottom: 2rem;">
-                <i class="fa-solid fa-shield-halved"></i>
-                JITSE Auth Portal
+        <div class="auth-card">
+            <div class="auth-header">
+                <i class="fa-solid fa-brain"></i>
+                <h2>JITSE AI Engine</h2>
+                <p style="color:var(--text-muted); font-size:0.85rem;">Plateforme d'Analyse de Profils</p>
             </div>
-            
+
             <div class="auth-tabs">
-                <div class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Se connecter</div>
-                <div class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Demander Accès</div>
+                <div class="auth-tab active" onclick="switchAuthTab('login')">Connexion</div>
+                <div class="auth-tab" onclick="switchAuthTab('register')">Inscription</div>
             </div>
 
-            <!-- Login Form -->
-            <div id="form-login">
-                <div id="login-error" style="color: var(--danger); display: none;"></div>
+            <!-- LOGIN FORM -->
+            <form id="login-form" onsubmit="handleLogin(event)">
                 <div class="form-group">
-                    <input type="email" id="login-email" class="form-control" placeholder="Email (ex: admin@jobbersfind.com)">
+                    <label>Adresse Email</label>
+                    <input type="email" id="login-email" required placeholder="nom@exemple.com">
                 </div>
                 <div class="form-group">
-                    <input type="password" id="login-pwd" class="form-control" placeholder="Mot de passe">
+                    <label>Mot de passe</label>
+                    <input type="password" id="login-password" required placeholder="••••••••">
                 </div>
-                <button class="btn" onclick="doLogin()">Connexion</button>
-            </div>
+                <button type="submit" class="btn-primary">
+                    <span>Se Connecter</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </button>
+            </form>
 
-            <!-- Register Form -->
-            <div id="form-register" style="display: none;">
-                <div id="reg-msg" style="display: none;"></div>
-                <p style="color:var(--text-muted); font-size:0.85rem; margin-bottom:1.5rem;">
-                    La création de compte nécessite la validation d'un administrateur.
-                </p>
+            <!-- REGISTER FORM -->
+            <form id="register-form" style="display:none;" onsubmit="handleRegister(event)">
                 <div class="form-group">
-                    <input type="email" id="reg-email" class="form-control" placeholder="Votre Email">
+                    <label>Adresse Email</label>
+                    <input type="email" id="reg-email" required placeholder="nom@exemple.com">
                 </div>
                 <div class="form-group">
-                    <input type="password" id="reg-pwd" class="form-control" placeholder="Mot de passe">
+                    <label>Mot de passe</label>
+                    <input type="password" id="reg-password" required placeholder="••••••••">
                 </div>
-                <button class="btn" style="background: var(--bg-panel); border: 1px solid var(--border);" onclick="doRegister()">Créer le compte</button>
-            </div>
+                <div class="form-group">
+                    <label>Rôle souhaité</label>
+                    <select id="reg-role">
+                        <option value="user">Utilisateur / Recruteur</option>
+                        <option value="admin">Administrateur</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn-primary">
+                    <span>S'inscrire</span>
+                    <i class="fa-solid fa-user-plus"></i>
+                </button>
+            </form>
             
-            <p style="margin-top:2rem; font-size:0.8rem; color:var(--text-muted)">Security powered by JITSE</p>
+            <div id="auth-msg" style="margin-top:15px; font-size:0.85rem; text-align:center;"></div>
         </div>
     </div>
 
-
-    <!-- APP LAYOUT -->
+    <!-- APPLICATION LAYOUT (CACHE INITIALEMENT) -->
     <div id="app-layout">
-        <aside class="sidebar">
-            <div class="logo">
-                <i class="fa-solid fa-brain"></i> JITSE Engine
+        <sidebar>
+            <div class="brand">
+                <i class="fa-solid fa-shield-halved" style="color:var(--primary)"></i>
+                <span>JITSE AI</span>
             </div>
-            <div style="font-size:0.8rem; color:var(--text-muted); margin-top:-1.5rem; text-align:center;">
-                Connecté en tant que: <span id="current-user-email" style="color:white; font-weight:bold;"></span>
+            <div style="font-size:0.75rem; color:var(--text-muted); padding:0 12px;" id="current-user-email">
+                --
             </div>
 
-            <nav style="display:flex; flex-direction:column; gap:0.5rem; margin-top:2rem;">
-                <!-- ADMIN ONLY -->
-                <a href="#" class="nav-item" id="nav-admin" onclick="showView('admin')" style="display:none;">
-                    <i class="fa-solid fa-user-shield"></i> Modération Accès
-                </a>
-                
-                <a href="#" class="nav-item active" onclick="showView('simulator')">
-                    <i class="fa-solid fa-vial-circle-check"></i> Simulateur IA
-                </a>
-                <a href="#" class="nav-item" onclick="showView('account')">
-                    <i class="fa-solid fa-user-lock"></i> Mon Compte
-                </a>
-                <a href="#" class="nav-item" onclick="showView('api')">
-                    <i class="fa-solid fa-code"></i> API & Doc
-                </a>
+            <nav style="display:flex; flex-direction:column; gap:8px; margin-top:20px;">
+                <div class="nav-item active" onclick="showView('simulator')">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Simulateur IA</span>
+                </div>
+                <div class="nav-item" id="nav-admin" style="display:none;" onclick="showView('admin')">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <span>Gestion Admin</span>
+                </div>
             </nav>
-            
-            <div style="margin-top: auto;">
-                <button onclick="logout()" class="btn" style="background:transparent; border:1px solid var(--border); box-shadow:none; font-size:0.9rem;">
-                    <i class="fa-solid fa-arrow-right-from-bracket"></i> Déconnexion
-                </button>
+
+            <div style="margin-top:auto;">
+                <div class="nav-item" onclick="logout()">
+                    <i class="fa-solid fa-right-from-bracket" style="color:var(--danger)"></i>
+                    <span style="color:var(--danger)">Déconnexion</span>
+                </div>
             </div>
-        </aside>
+        </sidebar>
 
-        <main class="main-content">
-            <header class="header">
-                <div>
-                    <h1>Dashboard de Supervision</h1>
-                    <p style="color:var(--text-muted); margin-top:0.5rem;">JobbersFind Intelligent Trust & Skill Engine</p>
-                </div>
-                <div class="status-badge">
-                    <i class="fa-solid fa-circle"></i> Système en Ligne & Actif
-                </div>
-            </header>
+        <main>
+            <!-- VUE SIMULATEUR -->
+            <div id="view-simulator" class="glass-panel">
+                <h2 style="margin-bottom:8px;"><i class="fa-solid fa-wand-magic-sparkles" style="color:var(--secondary)"></i> Evaluation du Profil</h2>
+                <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:24px;">Remplissez les informations ci-dessous pour lancer le moteur d'analyse multi-modal.</p>
 
-            <!-- VIEW: ADMIN MODERATION -->
-            <section id="view-admin" class="glass-panel">
-                <div class="section-title" style="color:var(--primary);">
-                    <i class="fa-solid fa-user-shield"></i> Approbation des nouveaux utilisateurs
+                <div class="form-group">
+                    <label>Métier / Domaine d'expertise</label>
+                    <input type="text" id="profession" placeholder="Ex: Developpeur Fullstack React / Node.js">
                 </div>
-                <p style="color:var(--text-muted); margin-bottom: 2rem;">
-                    En tant qu'administrateur, vous devez approuver toute nouvelle demande d'accès.<br/>
-                    <b>(Une seule fois requise par utilisateur).</b>
-                </p>
-                
-                <button class="btn btn-small" onclick="loadPendingUsers()" style="margin-bottom: 2rem; width:auto; border-radius:8px;">
-                    <i class="fa-solid fa-rotate-right"></i> Rafraîchir la liste
+
+                <div class="form-group">
+                    <label>Description des compétences & Expériences</label>
+                    <textarea id="description" rows="4" placeholder="Décrivez le parcours, les projets réalisés, les frameworks maîtrisés..."></textarea>
+                </div>
+
+                <!-- SECTION FICHIERS -->
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-bottom:20px;">
+                    <!-- Photos / Portfolio -->
+                    <div class="form-group">
+                        <label>Portfolio / Captures (Images)</label>
+                        <div class="file-upload-box" onclick="document.getElementById('portfolio_upload').click()">
+                            <i class="fa-solid fa-images" style="font-size:1.5rem; color:var(--primary); margin-bottom:8px;"></i>
+                            <p style="font-size:0.8rem;">Ajouter des images</p>
+                        </div>
+                        <input type="file" id="portfolio_upload" multiple accept="image/*" style="display:none;" onchange="previewImages(event)">
+                        <div id="image-preview" class="file-preview-container"></div>
+                    </div>
+
+                    <!-- Documents PDF -->
+                    <div class="form-group">
+                        <label>Attestations / Diplômes (PDF)</label>
+                        <div class="file-upload-box" onclick="document.getElementById('docs_upload').click()">
+                            <i class="fa-solid fa-file-pdf" style="font-size:1.5rem; color:var(--secondary); margin-bottom:8px;"></i>
+                            <p style="font-size:0.8rem;">Ajouter des PDFs</p>
+                        </div>
+                        <input type="file" id="docs_upload" multiple accept=".pdf" style="display:none;" onchange="previewDocs(event)">
+                        <div id="docs-preview" class="file-preview-container"></div>
+                    </div>
+
+                    <!-- Vidéo -->
+                    <div class="form-group">
+                        <label>Vidéo de présentation (MP4/WebM)</label>
+                        <div class="file-upload-box" onclick="document.getElementById('video_upload').click()">
+                            <i class="fa-solid fa-video" style="font-size:1.5rem; color:var(--accent); margin-bottom:8px;"></i>
+                            <p style="font-size:0.8rem;">Ajouter une vidéo</p>
+                        </div>
+                        <input type="file" id="video_upload" accept="video/*" style="display:none;" onchange="previewVideo(event)">
+                        <div id="video-preview" class="file-preview-container"></div>
+                    </div>
+                </div>
+
+                <button class="btn-primary" id="analyze-btn" onclick="submitAnalysis()">
+                    <span id="btn-text">Envoyer le Dossier à l'IA JITSE</span>
+                    <div class="spinner" id="btn-spinner"></div>
                 </button>
+
+                <!-- SECTION RESULTATS -->
+                <div id="result-container" style="display:none; margin-top:32px; border-top:1px solid var(--card-border); padding-top:24px;">
+                    <h3>Résultats de l'Analyse</h3>
+                    
+                    <div class="score-display-card">
+                        <div class="circular-progress" id="circle-score" style="--percentage: 0;">
+                            <span class="score-value" id="final-score">0</span>
+                        </div>
+                        <div>
+                            <h4 id="trust-level" style="font-size:1.2rem; color:var(--primary);">Analyse en attente</h4>
+                            <p style="color:var(--text-muted); font-size:0.85rem;" id="ai-confidence">Certitude IA : --</p>
+                        </div>
+                    </div>
+
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-title">Score Compétences</div>
+                            <div class="metric-value" id="skill-score">0/100</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-title">Cohérence Épreuves</div>
+                            <div class="metric-value" id="evidence-score">0/100</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-title">Complétude Profil</div>
+                            <div class="metric-value" id="profile-score">0/100</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-title">Indice de Fraude / Risque</div>
+                            <div class="metric-value" id="fraud-score" style="color:var(--danger)">0/100</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:20px; background:rgba(15,23,42,0.4); padding:16px; border-radius:12px; border:1px solid var(--card-border);">
+                        <strong>Certificats & Documents :</strong> <span id="document-bonus-text" style="color:var(--text-muted)">Non évalué</span>
+                        <p id="ai-rec" style="margin-top:8px; font-size:0.9rem; color:var(--text-muted);"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VUE ADMIN -->
+            <div id="view-admin" class="glass-panel" style="display:none;">
+                <h2><i class="fa-solid fa-user-check" style="color:var(--success)"></i> Demandes d'Inscriptions en Attente</h2>
+                <p style="color:var(--text-muted); font-size:0.9rem; margin-bottom:20px;">Approuvez les accès utilisateurs pour autoriser leur connexion.</p>
 
                 <ul class="admin-list" id="pending-users-list">
                     <li><span style="color:var(--text-muted);">Chargement...</span></li>
                 </ul>
-            </section>
-            
-            
-            <!-- VIEW: ACCOUNT CONFIG -->
-            <section id="view-account" class="glass-panel">
-                <div class="section-title">
-                    <i class="fa-solid fa-user-lock"></i> Paramètres de Sécurité
-                </div>
-                <p style="color:var(--text-muted); margin-bottom: 2rem;">Modifiez votre mot de passe d'accès.</p>
-                
-                <div style="max-width:400px;">
-                    <div id="pwd-msg"></div>
-                    <div class="form-group">
-                        <label class="form-label">Nouveau mot de passe</label>
-                        <input type="password" id="new-pwd" class="form-control">
-                    </div>
-                    <button class="btn" onclick="changePassword()">Mettre à jour</button>
-                </div>
-            </section>
-
-
-            <!-- VIEW: Simulateur -->
-            <section id="view-simulator" class="glass-panel" style="display: block;">
-                <div class="section-title">
-                    <i class="fa-solid fa-vial-circle-check"></i> Création de Dossier (Test IA)
-                </div>
-                
-                <p style="color:var(--text-muted); margin-bottom: 2rem; line-height: 1.6;">
-                    Incluez correctement les documents et médias (Photos, Vidéos, CNI/Diplômes). L'IA appliquera des pondérations strictes en fonction du métier. <br/>
-                    <i>💡 <b>Détection IA:</b> Renommez une image avec "ia" ou "stock" pour simuler un blocage pour Fraude visuelle !</i>
-                </p>
-
-                <div class="grid-2">
-                    <div>
-                        <h3 style="margin-bottom: 1rem; color:var(--primary); font-size: 1.1rem;"><i class="fa-solid fa-address-card"></i> Profil & Identité</h3>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Profession / Métier</label>
-                            <select id="profession" class="form-control">
-                                <option value="mason">Maçon (Construction)</option>
-                                <option value="web_developer">Développeur Web (Tech)</option>
-                                <option value="photographer">Photographe (Média)</option>
-                                <option value="teacher">Professeur (Services)</option>
-                            </select>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Description du profil 📝</label>
-                            <textarea id="description" class="form-control" rows="3">Spécialiste de mon domaine, garantissant un travail propre, rapide et aux normes en vigueur pour toute la clientèle.</textarea>
-                        </div>
-
-                        <h3 style="margin-bottom: 1rem; color:var(--primary); font-size: 1.1rem; margin-top: 2rem;"><i class="fa-solid fa-file-contract"></i> Documents Administratifs</h3>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Documents Approuvés (CNI, Patente) <span class="badge-bonus">+ BONUS</span></label>
-                            <div class="upload-zone" onclick="document.getElementById('docs_upload').click()">
-                                <i class="fa-solid fa-file-pdf"></i>
-                                <p>Cliquez pour rajouter vos documents</p>
-                                <input type="file" id="docs_upload" multiple accept=".pdf,.doc,.docx,image/*" style="display: none;" onchange="previewDocs(event)">
-                            </div>
-                            <div id="docs-preview" class="file-preview"></div>
-                        </div>
-                    </div>
-
-                    <div>
-                        <h3 style="margin-bottom: 1rem; color:var(--secondary); font-size: 1.1rem;"><i class="fa-solid fa-camera-retro"></i> Preuves Visuelles </h3>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Photos du Portfolio (Réalisations) 📸</label>
-                            <div class="upload-zone" onclick="document.getElementById('portfolio_upload').click()">
-                                <i class="fa-solid fa-cloud-arrow-up"></i>
-                                <p>Cliquez ou glissez vos réalisations visuelles ici</p>
-                                <input type="file" id="portfolio_upload" multiple accept="image/*" style="display: none;" onchange="previewImages(event)">
-                            </div>
-                            <div id="image-preview" class="file-preview"></div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">Vidéo de présentation / Chantier 🎥</label>
-                            <div class="upload-zone" onclick="document.getElementById('video_upload').click()">
-                                <i class="fa-solid fa-video"></i>
-                                <p>Cliquez pour ajouter une vidéo MP4</p>
-                                <input type="file" id="video_upload" accept="video/mp4,video/webm" style="display: none;" onchange="previewVideo(event)">
-                            </div>
-                            <div id="video-preview" class="file-preview"></div>
-                        </div>
-                        
-                        <button class="btn" id="analyze-btn" onclick="submitAnalysis()" style="margin-top: 2rem;">
-                            <span id="btn-text">Envoyer le Dossier à l'IA JITSE</span>
-                            <div class="spinner" id="btn-spinner"></div>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- RESULTATS -->
-                <div id="result-container" class="passport-result">
-                    <hr style="border:0; border-top:1px solid var(--border); margin: 3rem 0;">
-                    <div class="section-title" style="color:var(--success);">
-                        <i class="fa-solid fa-passport"></i> JobbersFind Trust Passport™
-                    </div>
-
-                    <div class="grid-2">
-                        <div style="text-align: center;">
-                            <p style="color:var(--text-muted); margin-bottom:1rem; font-weight:600;">TRUST SCORE FINAL</p>
-                            <div class="score-circle" id="circle-score" style="--percentage: 0%;">
-                                <div class="score-value" id="final-score">0</div>
-                            </div>
-                            <h3 id="trust-level" style="text-transform:uppercase; letter-spacing:2px; color:var(--success);">---</h3>
-                            <p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.5rem;" id="ai-confidence">Certitude IA : Haut</p>
-                        </div>
-
-                        <div>
-                            <ul class="badge-list">
-                                <li class="badge-item">
-                                    <span>Compétences Visuelles (Portfolio)</span>
-                                    <strong id="skill-score">--/100</strong>
-                                </li>
-                                <li class="badge-item">
-                                    <span>Index de Preuves Diverses</span>
-                                    <strong id="evidence-score">--/100</strong>
-                                </li>
-                                <li class="badge-item">
-                                    <span>Qualité Déclarative (Profil)</span>
-                                    <strong id="profile-score">--/100</strong>
-                                </li>
-                                <li class="badge-item" style="border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.05);">
-                                    <span>Documents Administratifs</span>
-                                    <strong id="document-bonus-text" style="color:var(--success)">--</strong>
-                                </li>
-                                <li class="badge-item" style="border-color: rgba(239, 68, 68, 0.3);">
-                                    <span>Risque de Fraude (Détection Fakes)</span>
-                                    <strong id="fraud-score" style="color:var(--danger)">--/100</strong>
-                                </li>
-                            </ul>
-                            
-                            <div class="ai-recommendation" id="ai-rec" style="white-space: pre-line;"></div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- VIEW: API INFO -->
-            <section id="view-api" class="glass-panel">
-                <div class="section-title">
-                    <i class="fa-solid fa-server"></i> API JITSE & Intégration
-                </div>
-                <p style="color:var(--text-muted); margin-bottom: 2rem;">Le backend JITSE 1.0 est prêt et sécurisé.</p>
-                <div style="background:rgba(0,0,0,0.3); padding:1.5rem; border-radius:12px; border:1px solid var(--border); margin-bottom:1.5rem;">
-                    <code style="color:var(--success); font-size:1.1rem;">POST /api/v1/auth/login</code><br><br>
-                    <code style="color:var(--success); font-size:1.1rem;">POST /api/v1/analysis/submit</code>
-                </div>
-                <a href="/docs" target="_blank" class="btn" style="width:auto; display:inline-flex;">Ouvrir Swagger UI</a>
-            </section>
+            </div>
         </main>
     </div>
 
+    <!-- SCRIPT FRONTEND -->
     <script>
-        // --- IAM & AUTH LOGIC ---
-        let session = null; // {email, role}
+        let session = {
+            email: null,
+            role: null
+        };
 
         function switchAuthTab(tab) {
             document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-            document.getElementById('tab-' + tab).classList.add('active');
-            document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
-            document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
+            if (tab === 'login') {
+                document.querySelectorAll('.auth-tab')[0].classList.add('active');
+                document.getElementById('login-form').style.display = 'block';
+                document.getElementById('register-form').style.display = 'none';
+            } else {
+                document.querySelectorAll('.auth-tab')[1].classList.add('active');
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('register-form').style.display = 'block';
+            }
+            document.getElementById('auth-msg').innerText = '';
         }
 
-        async function doLogin() {
+        async function handleLogin(e) {
+            e.preventDefault();
+            const msg = document.getElementById('auth-msg');
+            msg.style.color = 'var(--text-muted)';
+            msg.innerText = "Connexion en cours...";
+
             const email = document.getElementById('login-email').value;
-            const pwd = document.getElementById('login-pwd').value;
-            const errDiv = document.getElementById('login-error');
-            
+            const password = document.getElementById('login-password').value;
+
             try {
                 const res = await fetch('/api/v1/auth/login', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({email: email, password: pwd})
+                    body: JSON.stringify({ email, password })
                 });
+                
                 const data = await res.json();
                 
-                if(!res.ok) {
-                    errDiv.innerText = data.detail;
-                    errDiv.style.display = 'block';
-                } else {
-                    session = data.session;
+                if (res.ok) {
+                    session.email = data.email;
+                    session.role = data.role;
                     initApp();
+                } else {
+                    msg.style.color = 'var(--danger)';
+                    msg.innerText = data.detail || "Erreur lors de la connexion.";
                 }
-            } catch (e) {
-                errDiv.innerText = "Erreur serveur.";
-                errDiv.style.display = 'block';
+            } catch (err) {
+                msg.style.color = 'var(--danger)';
+                msg.innerText = "Impossible de contacter le serveur.";
             }
         }
 
-        async function doRegister() {
+        async function handleRegister(e) {
+            e.preventDefault();
+            const msg = document.getElementById('auth-msg');
+            msg.style.color = 'var(--text-muted)';
+            msg.innerText = "Traitement de l'inscription...";
+
             const email = document.getElementById('reg-email').value;
-            const pwd = document.getElementById('reg-pwd').value;
-            const msgDiv = document.getElementById('reg-msg');
-            
+            const password = document.getElementById('reg-password').value;
+            const role = document.getElementById('reg-role').value;
+
             try {
                 const res = await fetch('/api/v1/auth/register', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({email: email, password: pwd})
+                    body: JSON.stringify({ email, password, role })
                 });
+                
                 const data = await res.json();
                 
-                if(!res.ok) {
-                    msgDiv.innerHTML = `<span style="color:var(--danger)">${data.detail}</span>`;
+                if (res.ok) {
+                    msg.style.color = 'var(--success)';
+                    msg.innerText = data.message || "Inscription enregistrée. En attente d'approbation.";
                 } else {
-                    msgDiv.innerHTML = `<span style="color:var(--success)">${data.message}</span>`;
+                    msg.style.color = 'var(--danger)';
+                    msg.innerText = data.detail || "Erreur lors de l'inscription.";
                 }
-                msgDiv.style.display = 'block';
-            } catch (e) {
-                msgDiv.innerHTML = `<span style="color:var(--danger)">Erreur serveur.</span>`;
-                msgDiv.style.display = 'block';
+            } catch (err) {
+                msg.style.color = 'var(--danger)';
+                msg.innerText = "Impossible de contacter le serveur.";
             }
         }
 
         function logout() {
-            session = null;
+            session = { email: null, role: null };
             document.getElementById('app-layout').style.display = 'none';
             document.getElementById('auth-screen').style.display = 'flex';
-            
-            document.getElementById('login-email').value = '';
-            document.getElementById('login-pwd').value = '';
-            document.getElementById('login-error').style.display = 'none';
-        }
-
-        async function changePassword() {
-            const newPwd = document.getElementById('new-pwd').value;
-            const msgDiv = document.getElementById('pwd-msg');
-            if(!newPwd || newPwd.length < 4) return alert('Mot de passe trop court.');
-            
-            try {
-                const res = await fetch('/api/v1/auth/users/change-password', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({email: session.email, password: newPwd})
-                });
-                if(res.ok) {
-                    msgDiv.innerHTML = `<span style="color:var(--success)">Mot de passe changé !</span>`;
-                    document.getElementById('new-pwd').value = '';
-                }
-            } catch(e) {}
         }
 
         async function loadPendingUsers() {
@@ -791,178 +655,192 @@ DASHBOARD_HTML = """
             list.innerHTML = '<li><span style="color:var(--text-muted);">Chargement...</span></li>';
             
             try {
-                const res = await fetch('/api/v1/auth/users/pending');
+                const res = await fetch(`/api/v1/auth/admin/pending?admin_email=${encodeURIComponent(session.email)}`);
                 const data = await res.json();
                 
-                if(data.pending_users.length === 0) {
-                    list.innerHTML = '<li><span style="color:var(--success);"><i class="fa-solid fa-check"></i> Aucun utilisateur en attente d\'approbation.</span></li>';
+                if (!res.ok) {
+                    list.innerHTML = `<li><span style="color:var(--danger);">${data.detail || 'Erreur'}</span></li>`;
+                    return;
+                }
+                
+                if (data.pending_users.length === 0) {
+                    list.innerHTML = '<li><span style="color:var(--text-muted);">Aucune demande en attente.</span></li>';
                     return;
                 }
                 
                 list.innerHTML = '';
-                data.pending_users.forEach(user => {
-                    list.innerHTML += `
-                        <li>
-                            <b style="font-size:1.1rem;">${user.email}</b>
-                            <button class="btn-approve" onclick="approveUser('${user.email}')">
-                                <i class="fa-solid fa-check-double"></i> Approuver
-                            </button>
-                        </li>
+                data.pending_users.forEach(u => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `
+                        <div>
+                            <strong>${u.email}</strong>
+                            <div style="font-size:0.8rem; color:var(--text-muted)">Inscrit le : ${u.created_at}</div>
+                        </div>
+                        <button class="btn-approve" onclick="approveUser('${u.email}')">
+                            <i class="fa-solid fa-check"></i> Approuver
+                        </button>
                     `;
+                    list.appendChild(li);
                 });
-            } catch(e) {}
+            } catch (e) {
+                list.innerHTML = '<li><span style="color:var(--danger);">Erreur de connexion serveur.</span></li>';
+            }
         }
-        
-        async function approveUser(email) {
+
+        async function approveUser(userEmail) {
             try {
-                await fetch(`/api/v1/auth/users/approve/${email}`, { method: 'POST' });
-                alert(`Utilisateur ${email} approuvé ! Il peut désormais se connecter.`);
-                loadPendingUsers(); // Reload liste
-            } catch(e) {}
+                const res = await fetch('/api/v1/auth/admin/approve', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        admin_email: session.email,
+                        target_email: userEmail
+                    })
+                });
+                
+                if (res.ok) {
+                    loadPendingUsers();
+                } else {
+                    const data = await res.json();
+                    alert("Erreur: " + data.detail);
+                }
+            } catch (e) {
+                alert("Erreur lors de l'approbation.");
+            }
         }
 
-
-        // --- UI LOGIC ---
         function initApp() {
-            // Hide auth, show layout
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('app-layout').style.display = 'flex';
             document.getElementById('current-user-email').innerText = session.email;
             
-            // Setup Admin
-            if(session.role === 'admin') {
+            if (session.role === 'admin') {
                 document.getElementById('nav-admin').style.display = 'flex';
                 showView('admin');
-                loadPendingUsers();
             } else {
                 document.getElementById('nav-admin').style.display = 'none';
                 showView('simulator');
             }
         }
 
-        function showView(viewId) {
+        function showView(viewName) {
             document.querySelectorAll('.glass-panel').forEach(p => p.style.display = 'none');
-            document.getElementById('view-' + viewId).style.display = 'block';
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
             
-            document.querySelectorAll('nav .nav-item').forEach(a => a.classList.remove('active'));
-            // Set active if nav exists
-            try { event.currentTarget.classList.add('active'); } catch(e) {}
+            const target = document.getElementById('view-' + viewName);
+            if (target) target.style.display = 'block';
+            
+            const navBtn = document.querySelector(`.nav-item[onclick*="'${viewName}'"]`);
+            if (navBtn) navBtn.classList.add('active');
+            
+            if (viewName === 'admin') {
+                loadPendingUsers();
+            }
         }
 
-        // --- SIMULATOR LOGIC (File Reading) ---
-        let statePhotos = 0, stateDocs = 0, hasVideo = false;
-        let globalPhotosFiles = [], globalDocsFiles = [], globalVideoFile = null;
-
+        // --- PREVIEW FUNCTIONS ---
         function previewImages(event) {
-            const preview = document.getElementById('image-preview');
-            preview.innerHTML = '';
-            globalPhotosFiles = Array.from(event.target.files);
-            statePhotos = globalPhotosFiles.length;
-            
-            globalPhotosFiles.forEach(f => {
-                const img = document.createElement('img');
-                img.src = URL.createObjectURL(f);
-                const div = document.createElement('div');
-                div.className = 'file-item';
-                div.appendChild(img);
-                const span = document.createElement('span');
-                span.innerText = f.name.substring(0, 15) + (f.name.length > 15 ? '...' : '');
-                div.appendChild(span);
-                preview.appendChild(div);
+            const container = document.getElementById('image-preview');
+            container.innerHTML = '';
+            Array.from(event.target.files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const item = document.createElement('div');
+                    item.className = 'file-item';
+                    item.innerHTML = `<img src="${e.target.result}"/> <span>${file.name}</span>`;
+                    container.appendChild(item);
+                };
+                reader.readAsDataURL(file);
             });
         }
 
         function previewDocs(event) {
-            const preview = document.getElementById('docs-preview');
-            preview.innerHTML = '';
-            globalDocsFiles = Array.from(event.target.files);
-            stateDocs = globalDocsFiles.length;
-            
-            globalDocsFiles.forEach(f => {
-                const div = document.createElement('div');
-                div.className = 'file-item';
-                div.innerHTML = `<i class="fa-solid fa-file-pdf" style="color:var(--secondary)"></i> <span>${f.name}</span>`;
-                preview.appendChild(div);
+            const container = document.getElementById('docs-preview');
+            container.innerHTML = '';
+            Array.from(event.target.files).forEach(file => {
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                item.innerHTML = `<i class="fa-solid fa-file-pdf" style="color:var(--primary); font-size:1.2rem;"></i> <span>${file.name}</span>`;
+                container.appendChild(item);
             });
         }
 
         function previewVideo(event) {
-            const preview = document.getElementById('video-preview');
-            preview.innerHTML = '';
-            const files = event.target.files;
-            
-            if(files.length > 0) {
-                hasVideo = true;
-                globalVideoFile = files[0];
-                const div = document.createElement('div');
-                div.className = 'file-item';
-                div.innerHTML = `<i class="fa-solid fa-video" style="color:var(--success)"></i> <span>${files[0].name}</span>`;
-                preview.appendChild(div);
-            } else {
-                hasVideo = false;
-                globalVideoFile = null;
+            const container = document.getElementById('video-preview');
+            container.innerHTML = '';
+            const file = event.target.files[0];
+            if (file) {
+                const item = document.createElement('div');
+                item.className = 'file-item';
+                item.innerHTML = `<i class="fa-solid fa-file-video" style="color:var(--secondary); font-size:1.2rem;"></i> <span>${file.name}</span>`;
+                container.appendChild(item);
             }
         }
 
+        // --- SUBMIT ANALYSIS ---
         async function submitAnalysis() {
-            if (statePhotos === 0) {
-                if(!confirm("⚠️ Vous n'avez ajouté aucune photo à votre portfolio ! Continuer quand même ?")) return;
-            }
-
+            const btn = document.getElementById('analyze-btn');
             const btnText = document.getElementById('btn-text');
             const spinner = document.getElementById('btn-spinner');
-            const resContainer = document.getElementById('result-container');
+            const resultDiv = document.getElementById('result-container');
             
-            btnText.style.display = 'none';
-            spinner.style.display = 'block';
-            resContainer.style.display = 'none';
+            btnText.innerText = "Analyse IA en cours...";
+            spinner.style.display = "inline-block";
+            btn.disabled = true;
 
-            const profession = document.getElementById('profession').value;
-            const desc = document.getElementById('description').value;
-
-            // Fichiers encodés pour simuler le comportement Multimodal Backend
-            const images = globalPhotosFiles.map((file, i) => ({
-                id: `img_${i}`, url: `http://simulated-upload.com/${encodeURIComponent(file.name)}`, media_type: "image", mime_type: file.type || "image/jpeg", size_bytes: file.size || 1024
-            }));
-            const documents = globalDocsFiles.map((file, i) => ({
-                id: `doc_${i}`, url: `http://simulated-upload.com/${encodeURIComponent(file.name)}`, media_type: "document", mime_type: file.type || "application/pdf", size_bytes: file.size || 2048
-            }));
-            let video = null;
-            if (hasVideo && globalVideoFile) {
-                video = { id: `vid_1`, url: `http://simulated-upload.com/${encodeURIComponent(globalVideoFile.name)}`, media_type: "video", mime_type: globalVideoFile.type || "video/mp4", size_bytes: globalVideoFile.size || 5048 };
+            const formData = new FormData();
+            formData.append('profession', document.getElementById('profession').value);
+            formData.append('description', document.getElementById('description').value);
+            
+            const portfolioFiles = document.getElementById('portfolio_upload').files;
+            for (let i = 0; i < portfolioFiles.length; i++) {
+                formData.append('portfolio', portfolioFiles[i]);
             }
 
-            const payload = {
-                dossier_id: "DOS-" + Math.floor(Math.random()*10000), provider_id: session.email,
-                profession_category: profession, profile: { description: desc, years_of_experience: 5, location: "Douala", services_offered: ["Service"], declared_skills: [], languages: ["FR"] },
-                presentation_video: video, portfolio_images: images, documents: documents
-            };
+            const docsFiles = document.getElementById('docs_upload').files;
+            for (let i = 0; i < docsFiles.length; i++) {
+                formData.append('documents', docsFiles[i]);
+            }
+
+            const videoFile = document.getElementById('video_upload').files[0];
+            if (videoFile) {
+                formData.append('video', videoFile);
+            }
 
             try {
-                const response = await fetch('/api/v1/analysis/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                const data = await response.json();
+                const res = await fetch('/api/v1/analysis/submit', {
+                    method: 'POST',
+                    body: formData
+                });
                 
-                document.getElementById('final-score').innerText = data.trust_score.toFixed(1);
-                document.getElementById('circle-score').style.setProperty('--percentage', data.trust_score + '%');
+                const data = await res.json();
                 
-                if(data.trust_score >= 80) document.getElementById('circle-score').style.background = `conic-gradient(var(--success) ${data.trust_score}%, rgba(255,255,255,0.1) 0)`;
-                else if (data.trust_score >= 50) document.getElementById('circle-score').style.background = `conic-gradient(var(--warning) ${data.trust_score}%, rgba(255,255,255,0.1) 0)`;
-                else document.getElementById('circle-score').style.background = `conic-gradient(var(--danger) ${data.trust_score}%, rgba(255,255,255,0.1) 0)`;
-
-                document.getElementById('trust-level').innerText = data.trust_level;
-                document.getElementById('ai-confidence').innerText = `Certitude IA: ${data.ai_confidence_level.replace('_', ' ')}`;
-
-                document.getElementById('skill-score').innerText = `${data.skill_evidence_score.toFixed(1)} / 100`;
-                document.getElementById('evidence-score').innerText = `${data.evidence_index.toFixed(1)} / 100`;
-                document.getElementById('profile-score').innerText = `${data.profile_quality_score.toFixed(1)} / 100`;
-                document.getElementById('fraud-score').innerText = `${data.fraud_risk_index.toFixed(1)} / 100`;
-                
-                document.getElementById('document-bonus-text').innerText = stateDocs > 0 ? `${stateDocs} Documents Approuvés ✔️` : `Aucun (Neutre) ➖`;
-                document.getElementById('ai-rec').innerText = `🤖 EXPLICATION IA:\n\n${data.ai_recommendation}`;
-                
-                resContainer.style.display = 'block';
-            } catch (err) { alert("Erreur: " + err.message); } 
-            finally { btnText.style.display = 'inline'; spinner.style.display = 'none'; }
+                if (res.ok) {
+                    document.getElementById('circle-score').style.setProperty('--percentage', `${data.trust_score}%`);
+                    document.getElementById('final-score').innerText = data.trust_score;
+                    document.getElementById('trust-level').innerText = data.trust_level;
+                    document.getElementById('ai-confidence').innerText = `Certitude IA : ${data.confidence || 'Haut'}`;
+                    
+                    document.getElementById('skill-score').innerText = `${data.skill_score}/100`;
+                    document.getElementById('evidence-score').innerText = `${data.evidence_score}/100`;
+                    document.getElementById('profile-score').innerText = `${data.profile_score}/100`;
+                    document.getElementById('fraud-score').innerText = `${data.fraud_risk}/100`;
+                    
+                    document.getElementById('document-bonus-text').innerText = data.has_documents ? "+15 pts (Vérifié)" : "Non fourni";
+                    document.getElementById('ai-rec').innerText = data.recommendations || "Aucune recommandation spécifique.";
+                    
+                    resultDiv.style.display = 'block';
+                    resultDiv.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    alert("Erreur lors de l'analyse : " + (data.detail || "Problème serveur"));
+                }
+            } catch (e) {
+                alert("Erreur réseau lors de la soumission.");
+            } finally {
+                btnText.innerText = "Envoyer le Dossier à l'IA JITSE";
+                spinner.style.display = "none";
+                btn.disabled = false;
+            }
         }
     </script>
 </body>
