@@ -132,49 +132,6 @@ DASHBOARD_HTML = """
             border: 1px solid rgba(16, 185, 129, 0.2);
         }
 
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-            gap: 1.5rem;
-        }
-
-        .stat-card {
-            background: var(--bg-panel);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 1.5rem;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem;
-            backdrop-filter: blur(10px);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            border-color: rgba(255, 255, 255, 0.15);
-        }
-
-        .stat-header {
-            display: flex;
-            justify-content: space-between;
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-
-        .stat-value {
-            font-size: 2.5rem;
-            font-weight: 800;
-        }
-
-        .stat-value.gradient {
-            background: linear-gradient(135deg, #38bdf8, #818cf8);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
         .glass-panel {
             background: var(--bg-panel);
             border: 1px solid var(--border);
@@ -207,6 +164,10 @@ DASHBOARD_HTML = """
             transition: all 0.3s ease;
             cursor: pointer;
             margin-bottom: 0.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
         }
         .upload-zone:hover {
             border-color: var(--primary);
@@ -362,6 +323,28 @@ DASHBOARD_HTML = """
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
+        .file-preview {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+        .file-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border);
+            padding: 0.5rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+        }
+        .file-item img {
+            width: 40px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
     </style>
 </head>
 <body>
@@ -406,7 +389,7 @@ DASHBOARD_HTML = """
             </div>
             
             <p style="color:var(--text-muted); margin-bottom: 2rem; line-height: 1.6;">
-                Incluez correctement les documents et médias. L'IA appliquera des pondérations strictes en fonction du métier. <br/>
+                Incluez correctement les documents et médias (Photos, Vidéos, CNI/Diplômes). L'IA appliquera des pondérations strictes en fonction du métier. <br/>
                 <i>Note: Les documents administratifs (CNI, Patente) agissent uniquement comme BONUS selon l'architecture (DA-001).</i>
             </p>
 
@@ -433,13 +416,13 @@ DASHBOARD_HTML = """
                     <h3 style="margin-bottom: 1rem; color:var(--primary); font-size: 1.1rem; margin-top: 2rem;"><i class="fa-solid fa-file-contract"></i> Documents Administratifs</h3>
                     
                     <div class="form-group">
-                        <label class="form-label">Sélectionner les documents attachés <span class="badge-bonus">+ BONUS</span></label>
-                        <select id="docs_count" class="form-control">
-                            <option value="0">Aucun document administratif (0 doc)</option>
-                            <option value="1">Carte Nationale d'Identité (CNI) (1 doc)</option>
-                            <option value="2">CNI + Registre de Commerce (2 docs)</option>
-                            <option value="3">CNI + Registre + Diplômes (3+ docs)</option>
-                        </select>
+                        <label class="form-label">Documents Approuvés (CNI, Patente) <span class="badge-bonus">+ BONUS</span></label>
+                        <div class="upload-zone" onclick="document.getElementById('docs_upload').click()">
+                            <i class="fa-solid fa-file-pdf"></i>
+                            <p>Cliquez pour rajouter vos documents</p>
+                            <input type="file" id="docs_upload" multiple accept=".pdf,.doc,.docx,image/*" style="display: none;" onchange="previewDocs(event)">
+                        </div>
+                        <div id="docs-preview" class="file-preview"></div>
                         <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.3rem;">Ces documents seront envoyés au Document Verification Engine.</p>
                     </div>
                 </div>
@@ -455,16 +438,18 @@ DASHBOARD_HTML = """
                             <p>Cliquez ou glissez vos réalisations visuelles ici</p>
                             <input type="file" id="portfolio_upload" multiple accept="image/*" style="display: none;" onchange="previewImages(event)">
                         </div>
-                        <div id="image-preview" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;"></div>
-                        <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">Ces visuels sont indispensables pour l'Agent Vision (PortfolioVisionAgent).</p>
+                        <div id="image-preview" class="file-preview"></div>
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">Ces visuels sont indispensables pour l'Agent Vision.</p>
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label">Vidéo de présentation / Chantier 🎥</label>
-                        <select id="has_video" class="form-control">
-                            <option value="true">Vidéo présente (Fichier: chantier_01.mp4)</option>
-                            <option value="false">Aucune vidéo attachée</option>
-                        </select>
+                        <div class="upload-zone" onclick="document.getElementById('video_upload').click()">
+                            <i class="fa-solid fa-video"></i>
+                            <p>Cliquez pour ajouter une vidéo MP4</p>
+                            <input type="file" id="video_upload" accept="video/mp4,video/webm" style="display: none;" onchange="previewVideo(event)">
+                        </div>
+                        <div id="video-preview" class="file-preview"></div>
                     </div>
                     
                     <button class="btn" id="analyze-btn" onclick="submitAnalysis()" style="margin-top: 2rem;">
@@ -548,8 +533,10 @@ DASHBOARD_HTML = """
     </main>
 
     <script>
-        // Store selected files
-        let selectedFilesCount = 0;
+        // Trackers d'état pour les fichiers
+        let statePhotos = 0;
+        let stateDocs = 0;
+        let hasVideo = false;
 
         function showView(viewId) {
             document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
@@ -561,27 +548,80 @@ DASHBOARD_HTML = """
             document.getElementById('view-' + viewId).style.display = 'block';
         }
 
+        // Preview de Portfolio (Images)
         function previewImages(event) {
             const preview = document.getElementById('image-preview');
             preview.innerHTML = '';
-            
             const files = event.target.files;
-            selectedFilesCount = files.length;
+            statePhotos = files.length;
             
             for(let i=0; i<files.length; i++) {
                 const img = document.createElement('img');
                 img.src = URL.createObjectURL(files[i]);
-                img.style.width = '60px';
-                img.style.height = '60px';
-                img.style.objectFit = 'cover';
-                img.style.borderRadius = '8px';
-                img.style.border = '2px solid rgba(99, 102, 241, 0.4)';
-                preview.appendChild(img);
+                const div = document.createElement('div');
+                div.className = 'file-item';
+                div.appendChild(img);
+                
+                const span = document.createElement('span');
+                span.innerText = files[i].name.substring(0, 10) + '...';
+                div.appendChild(span);
+                
+                preview.appendChild(div);
+            }
+        }
+
+        // Preview Documents
+        function previewDocs(event) {
+            const preview = document.getElementById('docs-preview');
+            preview.innerHTML = '';
+            const files = event.target.files;
+            stateDocs = files.length;
+            
+            for(let i=0; i<files.length; i++) {
+                const div = document.createElement('div');
+                div.className = 'file-item';
+                
+                const icon = document.createElement('i');
+                icon.className = 'fa-solid fa-file-pdf';
+                icon.style.color = 'var(--secondary)';
+                div.appendChild(icon);
+                
+                const span = document.createElement('span');
+                span.innerText = files[i].name;
+                div.appendChild(span);
+                
+                preview.appendChild(div);
+            }
+        }
+
+        // Preview Video
+        function previewVideo(event) {
+            const preview = document.getElementById('video-preview');
+            preview.innerHTML = '';
+            const files = event.target.files;
+            
+            if(files.length > 0) {
+                hasVideo = true;
+                const div = document.createElement('div');
+                div.className = 'file-item';
+                
+                const icon = document.createElement('i');
+                icon.className = 'fa-solid fa-video';
+                icon.style.color = 'var(--success)';
+                div.appendChild(icon);
+                
+                const span = document.createElement('span');
+                span.innerText = files[0].name;
+                div.appendChild(span);
+                
+                preview.appendChild(div);
+            } else {
+                hasVideo = false;
             }
         }
 
         async function submitAnalysis() {
-            if (selectedFilesCount === 0) {
+            if (statePhotos === 0) {
                 if(!confirm("⚠️ Vous n'avez ajouté aucune photo à votre portfolio ! Le score de Compétence Visuelle sera pénalisé. Continuer quand même ?")) {
                     return;
                 }
@@ -600,22 +640,19 @@ DASHBOARD_HTML = """
             const professionText = profSelect.options[profSelect.selectedIndex].text;
             
             const desc = document.getElementById('description').value;
-            const hasVid = document.getElementById('has_video').value === 'true';
-            
-            const docsCount = parseInt(document.getElementById('docs_count').value);
 
-            // Génération dynamique basée sur les *vraies* images uploadées dans l'interface
-            const images = Array(selectedFilesCount).fill(0).map((_, i) => ({
+            // Structure des images ajoutées via FileReader
+            const images = Array(statePhotos).fill(0).map((_, i) => ({
                 id: `img_${i}`, url: `http://simulated-upload.com/visuel_${i}.jpg`, media_type: "image", mime_type: "image/jpeg", size_bytes: 1024
             }));
             
-            // Mock Documents
-            const documents = Array(docsCount).fill(0).map((_, i) => ({
+            // Structure des documents via FileReader
+            const documents = Array(stateDocs).fill(0).map((_, i) => ({
                 id: `doc_${i}`, url: `http://simulated-upload.com/doc_${i}.pdf`, media_type: "document", mime_type: "application/pdf", size_bytes: 2048
             }));
             
             let video = null;
-            if (hasVid) {
+            if (hasVideo) {
                 video = {id: `vid_1`, url: `http://simulated-upload.com/chantier_01.mp4`, media_type: "video", mime_type: "video/mp4", size_bytes: 5048};
             }
 
@@ -664,10 +701,10 @@ DASHBOARD_HTML = """
                 document.getElementById('profile-score').innerText = `${data.profile_quality_score.toFixed(1)} / 100`;
                 document.getElementById('fraud-score').innerText = `${data.fraud_risk_index.toFixed(1)} / 100`;
                 
-                if(docsCount > 0) {
-                    document.getElementById('document-bonus-text').innerText = `${docsCount} Documents Authentifiés ✔️`;
+                if(stateDocs > 0) {
+                    document.getElementById('document-bonus-text').innerText = `${stateDocs} Documents (Bénéficie du DA-001) ✔️`;
                 } else {
-                    document.getElementById('document-bonus-text').innerText = `Aucun Doc (Non requis) ➖`;
+                    document.getElementById('document-bonus-text').innerText = `Aucun Doc (Neutre) ➖`;
                 }
 
                 document.getElementById('ai-rec').innerText = `🤖 EXPLICATION IA:\n\n${data.ai_recommendation}`;
