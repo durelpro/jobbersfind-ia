@@ -450,19 +450,20 @@ DASHBOARD_HTML = """
                     
                     <div class="form-group">
                         <label class="form-label">Photos du Portfolio (Réalisations) 📸</label>
-                        <div class="upload-zone" onclick="document.getElementById('portfolio_count').focus()">
-                            <i class="fa-solid fa-images"></i>
-                            <p>Glissez vos réalisations ici ou définissez le nombre</p>
-                            <input type="number" id="portfolio_count" class="form-control" value="8" min="0" max="20" style="margin-top: 1rem; text-align: center;">
+                        <div class="upload-zone" onclick="document.getElementById('portfolio_upload').click()">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>
+                            <p>Cliquez ou glissez vos réalisations visuelles ici</p>
+                            <input type="file" id="portfolio_upload" multiple accept="image/*" style="display: none;" onchange="previewImages(event)">
                         </div>
-                        <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.3rem;">Les images sont analysées par l'Agent Vision selon les standards du métier.</p>
+                        <div id="image-preview" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 1rem;"></div>
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.5rem;">Ces visuels sont indispensables pour l'Agent Vision (PortfolioVisionAgent).</p>
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label">Vidéo de présentation / Chantier 🎥</label>
                         <select id="has_video" class="form-control">
-                            <option value="true">Vidéo présente (Analyse par Video Agent)</option>
-                            <option value="false">Aucune vidéo</option>
+                            <option value="true">Vidéo présente (Fichier: chantier_01.mp4)</option>
+                            <option value="false">Aucune vidéo attachée</option>
                         </select>
                     </div>
                     
@@ -547,6 +548,9 @@ DASHBOARD_HTML = """
     </main>
 
     <script>
+        // Store selected files
+        let selectedFilesCount = 0;
+
         function showView(viewId) {
             document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
             event.currentTarget.classList.add('active');
@@ -557,7 +561,32 @@ DASHBOARD_HTML = """
             document.getElementById('view-' + viewId).style.display = 'block';
         }
 
+        function previewImages(event) {
+            const preview = document.getElementById('image-preview');
+            preview.innerHTML = '';
+            
+            const files = event.target.files;
+            selectedFilesCount = files.length;
+            
+            for(let i=0; i<files.length; i++) {
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(files[i]);
+                img.style.width = '60px';
+                img.style.height = '60px';
+                img.style.objectFit = 'cover';
+                img.style.borderRadius = '8px';
+                img.style.border = '2px solid rgba(99, 102, 241, 0.4)';
+                preview.appendChild(img);
+            }
+        }
+
         async function submitAnalysis() {
+            if (selectedFilesCount === 0) {
+                if(!confirm("⚠️ Vous n'avez ajouté aucune photo à votre portfolio ! Le score de Compétence Visuelle sera pénalisé. Continuer quand même ?")) {
+                    return;
+                }
+            }
+
             const btnText = document.getElementById('btn-text');
             const spinner = document.getElementById('btn-spinner');
             const resContainer = document.getElementById('result-container');
@@ -571,25 +600,23 @@ DASHBOARD_HTML = """
             const professionText = profSelect.options[profSelect.selectedIndex].text;
             
             const desc = document.getElementById('description').value;
-            const pCount = parseInt(document.getElementById('portfolio_count').value);
             const hasVid = document.getElementById('has_video').value === 'true';
             
-            // Récupère le nombre de documents d'appui
             const docsCount = parseInt(document.getElementById('docs_count').value);
 
-            // Mock Data
-            const images = Array(pCount).fill(0).map((_, i) => ({
-                id: `img_${i}`, url: `http://dummy.com/${i}.jpg`, media_type: "image", mime_type: "image/jpeg", size_bytes: 1024
+            // Génération dynamique basée sur les *vraies* images uploadées dans l'interface
+            const images = Array(selectedFilesCount).fill(0).map((_, i) => ({
+                id: `img_${i}`, url: `http://simulated-upload.com/visuel_${i}.jpg`, media_type: "image", mime_type: "image/jpeg", size_bytes: 1024
             }));
             
             // Mock Documents
             const documents = Array(docsCount).fill(0).map((_, i) => ({
-                id: `doc_${i}`, url: `http://dummy.com/doc_${i}.pdf`, media_type: "document", mime_type: "application/pdf", size_bytes: 2048
+                id: `doc_${i}`, url: `http://simulated-upload.com/doc_${i}.pdf`, media_type: "document", mime_type: "application/pdf", size_bytes: 2048
             }));
             
             let video = null;
             if (hasVid) {
-                video = {id: `vid_1`, url: `http://dummy.com/v.mp4`, media_type: "video", mime_type: "video/mp4", size_bytes: 5048};
+                video = {id: `vid_1`, url: `http://simulated-upload.com/chantier_01.mp4`, media_type: "video", mime_type: "video/mp4", size_bytes: 5048};
             }
 
             const payload = {
@@ -606,7 +633,7 @@ DASHBOARD_HTML = """
                 },
                 presentation_video: video,
                 portfolio_images: images,
-                documents: documents // ← IMPORTANT: On injecte bien les documents pour l'API
+                documents: documents
             };
 
             try {
@@ -618,10 +645,8 @@ DASHBOARD_HTML = """
                 
                 const data = await response.json();
                 
-                // Mettre à jour l'UI avec les data
                 document.getElementById('final-score').innerText = data.trust_score.toFixed(1);
                 
-                // Animation du cercle CSS
                 const circle = document.getElementById('circle-score');
                 const scorePerc = data.trust_score + '%';
                 circle.style.setProperty('--percentage', scorePerc);
@@ -639,7 +664,6 @@ DASHBOARD_HTML = """
                 document.getElementById('profile-score').innerText = `${data.profile_quality_score.toFixed(1)} / 100`;
                 document.getElementById('fraud-score').innerText = `${data.fraud_risk_index.toFixed(1)} / 100`;
                 
-                // Afficher visuellement si des documents ont été évalués et ont boosté le projet
                 if(docsCount > 0) {
                     document.getElementById('document-bonus-text').innerText = `${docsCount} Documents Authentifiés ✔️`;
                 } else {
