@@ -25,8 +25,9 @@ app.add_middleware(
 
 # Enregistrement des routeurs
 app.include_router(analysis.router)
-from src.api.routes import admin
+from src.api.routes import admin, auth
 app.include_router(admin.router)
+app.include_router(auth.router)
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
