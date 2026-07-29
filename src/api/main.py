@@ -5,6 +5,9 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from src.api.routes import analysis
 
+from fastapi.responses import HTMLResponse
+from src.api.dashboard_view import DASHBOARD_HTML
+
 app = FastAPI(
     title="JobbersFind AI Trust Engine (JITSE)",
     description="API du moteur d'évaluation de la fiabilité des prestataires",
@@ -25,15 +28,11 @@ app.include_router(analysis.router)
 from src.api.routes import admin
 app.include_router(admin.router)
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root():
-    return {
-        "message": "Bienvenue sur JobbersFind AI Trust Engine (JITSE)",
-        "version": "1.0.0",
-        "status": "online",
-        "documentation": "/docs",
-        "health": "/health"
-    }
+    """Retourne le Dashboard Web d'administration et de simulation."""
+    return DASHBOARD_HTML
+
 
 @app.get("/health")
 async def health_check():
