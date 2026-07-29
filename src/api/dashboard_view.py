@@ -49,7 +49,6 @@ DASHBOARD_HTML = """
             background-attachment: fixed;
         }
 
-        /* Sidebar */
         .sidebar {
             width: 280px;
             background: rgba(15, 17, 26, 0.7);
@@ -99,7 +98,6 @@ DASHBOARD_HTML = """
             box-shadow: 0 4px 20px rgba(0,0,0,0.2), inset 0 0 0 1px var(--border);
         }
 
-        /* Main Content */
         .main-content {
             flex: 1;
             padding: 2rem 3rem;
@@ -134,9 +132,6 @@ DASHBOARD_HTML = """
             border: 1px solid rgba(16, 185, 129, 0.2);
         }
 
-        .status-badge i { font-size: 0.5rem; }
-
-        /* Stats Grid */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -180,7 +175,6 @@ DASHBOARD_HTML = """
             -webkit-text-fill-color: transparent;
         }
 
-        /* Glass Panel */
         .glass-panel {
             background: var(--bg-panel);
             border: 1px solid var(--border);
@@ -199,17 +193,52 @@ DASHBOARD_HTML = """
             gap: 0.75rem;
         }
 
-        /* Form */
+        /* Forms & Upload simulation */
         .form-group {
             margin-bottom: 1.5rem;
         }
-
+        
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            background: rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 0.5rem;
+        }
+        .upload-zone:hover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.05);
+        }
+        .upload-zone i {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+        .upload-zone p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
         .form-label {
-            display: block;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
             margin-bottom: 0.5rem;
             color: var(--text-muted);
             font-weight: 500;
             font-size: 0.9rem;
+        }
+
+        .form-label .badge-bonus {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
         }
 
         .form-control {
@@ -252,7 +281,6 @@ DASHBOARD_HTML = """
             box-shadow: 0 8px 25px var(--primary-glow);
         }
 
-        /* Results / Passport */
         .passport-result {
             display: none;
             margin-top: 2rem;
@@ -323,7 +351,6 @@ DASHBOARD_HTML = """
             line-height: 1.6;
         }
 
-        /* Loading Spinner */
         .spinner {
             display: none;
             width: 24px;
@@ -368,50 +395,26 @@ DASHBOARD_HTML = """
                 <p style="color:var(--text-muted); margin-top:0.5rem;">JobbersFind Intelligent Trust & Skill Engine</p>
             </div>
             <div class="status-badge">
-                <i class="fa-solid fa-circle"></i> Système en Ligne & Multi-Agents Actifs
+                <i class="fa-solid fa-circle"></i> Système en Ligne & Actif
             </div>
         </header>
-
-        <section class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-header">
-                    <span>Moteurs IA</span>
-                    <i class="fa-solid fa-network-wired" style="color:var(--primary)"></i>
-                </div>
-                <div class="stat-value">7/7</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-header">
-                    <span>Latence Moyenne</span>
-                    <i class="fa-solid fa-bolt" style="color:var(--warning)"></i>
-                </div>
-                <div class="stat-value">254<span style="font-size:1.2rem; color:var(--text-muted);">ms</span></div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-header">
-                    <span>Métiers Indexés (JKS)</span>
-                    <i class="fa-solid fa-briefcase" style="color:var(--secondary)"></i>
-                </div>
-                <div class="stat-value gradient">26+</div>
-            </div>
-        </section>
 
         <!-- VIEW: Simulateur -->
         <section id="view-simulator" class="glass-panel" style="display: block;">
             <div class="section-title">
-                <i class="fa-solid fa-vial-circle-check"></i> Test de l'Agent d'Évaluation
+                <i class="fa-solid fa-vial-circle-check"></i> Création de Dossier (Test IA)
             </div>
             
             <p style="color:var(--text-muted); margin-bottom: 2rem; line-height: 1.6;">
-                Soumettez un dossier fictif pour observer comment les moteurs (Vision, NLP, Video) analysent les preuves et génèrent le Trust Passport.
+                Incluez correctement les documents et médias. L'IA appliquera des pondérations strictes en fonction du métier. <br/>
+                <i>Note: Les documents administratifs (CNI, Patente) agissent uniquement comme BONUS selon l'architecture (DA-001).</i>
             </p>
 
             <div class="grid-2">
+                <!-- COLONNE 1 : TEXTE & DOCUMENTS -->
                 <div>
-                    <div class="form-group">
-                        <label class="form-label">ID du Prestataire</label>
-                        <input type="text" id="provider_id" class="form-control" value="PROV-TEST-909" readonly>
-                    </div>
+                    <h3 style="margin-bottom: 1rem; color:var(--primary); font-size: 1.1rem;"><i class="fa-solid fa-address-card"></i> Profil & Identité</h3>
+                    
                     <div class="form-group">
                         <label class="form-label">Profession / Métier</label>
                         <select id="profession" class="form-control">
@@ -421,27 +424,50 @@ DASHBOARD_HTML = """
                             <option value="teacher">Professeur (Services)</option>
                         </select>
                     </div>
+                    
                     <div class="form-group">
-                        <label class="form-label">Description du profil</label>
-                        <textarea id="description" class="form-control" rows="3">Je suis un professionnel expérimenté avec plus de 10 ans de pratique dans mon domaine. Je fournis un travail de qualité.</textarea>
+                        <label class="form-label">Description du profil 📝</label>
+                        <textarea id="description" class="form-control" rows="3">Spécialiste de mon domaine, garantissant un travail propre, rapide et aux normes en vigueur pour toute la clientèle.</textarea>
+                    </div>
+
+                    <h3 style="margin-bottom: 1rem; color:var(--primary); font-size: 1.1rem; margin-top: 2rem;"><i class="fa-solid fa-file-contract"></i> Documents Administratifs</h3>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Sélectionner les documents attachés <span class="badge-bonus">+ BONUS</span></label>
+                        <select id="docs_count" class="form-control">
+                            <option value="0">Aucun document administratif (0 doc)</option>
+                            <option value="1">Carte Nationale d'Identité (CNI) (1 doc)</option>
+                            <option value="2">CNI + Registre de Commerce (2 docs)</option>
+                            <option value="3">CNI + Registre + Diplômes (3+ docs)</option>
+                        </select>
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.3rem;">Ces documents seront envoyés au Document Verification Engine.</p>
                     </div>
                 </div>
 
+                <!-- COLONNE 2 : PREUVES VISUELLES (PORTFOLIO, VIDEO) -->
                 <div>
+                    <h3 style="margin-bottom: 1rem; color:var(--secondary); font-size: 1.1rem;"><i class="fa-solid fa-camera-retro"></i> Preuves Visuelles (Le plus important !)</h3>
+                    
                     <div class="form-group">
-                        <label class="form-label">Nombre de photos au Portfolio</label>
-                        <input type="number" id="portfolio_count" class="form-control" value="8" min="0" max="20">
+                        <label class="form-label">Photos du Portfolio (Réalisations) 📸</label>
+                        <div class="upload-zone" onclick="document.getElementById('portfolio_count').focus()">
+                            <i class="fa-solid fa-images"></i>
+                            <p>Glissez vos réalisations ici ou définissez le nombre</p>
+                            <input type="number" id="portfolio_count" class="form-control" value="8" min="0" max="20" style="margin-top: 1rem; text-align: center;">
+                        </div>
+                        <p style="font-size:0.8rem; color:var(--text-muted); margin-top:0.3rem;">Les images sont analysées par l'Agent Vision selon les standards du métier.</p>
                     </div>
+                    
                     <div class="form-group">
-                        <label class="form-label">Vidéo de présentation incluse ?</label>
+                        <label class="form-label">Vidéo de présentation / Chantier 🎥</label>
                         <select id="has_video" class="form-control">
-                            <option value="true">Oui (Forte Preuve)</option>
-                            <option value="false">Non</option>
+                            <option value="true">Vidéo présente (Analyse par Video Agent)</option>
+                            <option value="false">Aucune vidéo</option>
                         </select>
                     </div>
                     
                     <button class="btn" id="analyze-btn" onclick="submitAnalysis()" style="margin-top: 2rem;">
-                        <span id="btn-text">Lancer l'Analyse Multi-Agents</span>
+                        <span id="btn-text">Envoyer le Dossier à l'IA JITSE</span>
                         <div class="spinner" id="btn-spinner"></div>
                     </button>
                 </div>
@@ -462,24 +488,31 @@ DASHBOARD_HTML = """
                         </div>
                         <h3 id="trust-level" style="text-transform:uppercase; letter-spacing:2px; color:var(--success);">---</h3>
                         <p style="color:var(--text-muted); font-size:0.9rem; margin-top:0.5rem;" id="ai-confidence">Certitude IA : Haut</p>
+                        <p style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted);">
+                            La pondération a été automatiquement ajustée par le système JITSE pour un <span id="res-prof" style="color:white; font-weight:bold;">--</span>.
+                        </p>
                     </div>
 
                     <div>
                         <ul class="badge-list">
                             <li class="badge-item">
-                                <span>Évaluation des Compétences Visuelles</span>
+                                <span>Évaluation des Compétences Visuelles (Portfolio)</span>
                                 <strong id="skill-score">--/100</strong>
                             </li>
                             <li class="badge-item">
-                                <span>Index de Preuves Fournies</span>
+                                <span>Index de Preuves (Dont Vidéo)</span>
                                 <strong id="evidence-score">--/100</strong>
                             </li>
                             <li class="badge-item">
-                                <span>Richesse du Profil</span>
+                                <span>Richesses Déclaratives (Profil)</span>
                                 <strong id="profile-score">--/100</strong>
                             </li>
+                            <li class="badge-item" style="border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.05);">
+                                <span>Bonus Documents Administratifs</span>
+                                <strong id="document-bonus-text" style="color:var(--success)">--</strong>
+                            </li>
                             <li class="badge-item" style="border-color: rgba(239, 68, 68, 0.3);">
-                                <span>Risque de Fraude Détécté</span>
+                                <span>Risque de Fraude et Incohérences</span>
                                 <strong id="fraud-score" style="color:var(--danger)">--/100</strong>
                             </li>
                         </ul>
@@ -504,15 +537,9 @@ DASHBOARD_HTML = """
             <div style="background:rgba(0,0,0,0.3); padding:1.5rem; border-radius:12px; border:1px solid var(--border); margin-bottom:1.5rem;">
                 <h4 style="margin-bottom:1rem; color:var(--primary);">1. Soumettre un Dossier</h4>
                 <code style="color:var(--success); font-size:1.1rem; display:block; margin-bottom:0.5rem;">POST /api/v1/analysis/submit</code>
-                <p style="color:var(--text-muted); font-size:0.9rem;">Accepte un JSON avec les IDs des médias. L'orchestrateur lance 7 agents en parallèle.</p>
+                <p style="color:var(--text-muted); font-size:0.9rem;">Accepte un JSON robuste avec les médias, vidéos et documents. L'orchestrateur lance 7 agents en parallèle.</p>
             </div>
 
-            <div style="background:rgba(0,0,0,0.3); padding:1.5rem; border-radius:12px; border:1px solid var(--border);">
-                <h4 style="margin-bottom:1rem; color:var(--secondary);">2. Dashboard Modération (Human-In-The-Loop)</h4>
-                <code style="color:var(--success); font-size:1.1rem; display:block; margin-bottom:0.5rem;">GET /api/v1/admin/dossiers/{id}/decision-support</code>
-                <p style="color:var(--text-muted); font-size:0.9rem;">L'IA ne décide jamais seule (Volume 6). Ce endpoint fournit les arguments à l'humain pour la décision finale.</p>
-            </div>
-            
             <br>
             <a href="/docs" target="_blank" class="btn" style="width:auto; display:inline-flex;">Ouvrir Swagger UI Complet</a>
         </section>
@@ -520,7 +547,6 @@ DASHBOARD_HTML = """
     </main>
 
     <script>
-        // Tab routing simple
         function showView(viewId) {
             document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
             event.currentTarget.classList.add('active');
@@ -531,9 +557,7 @@ DASHBOARD_HTML = """
             document.getElementById('view-' + viewId).style.display = 'block';
         }
 
-        // Simulation de l'appel API JITSE
         async function submitAnalysis() {
-            // UI loading state
             const btnText = document.getElementById('btn-text');
             const spinner = document.getElementById('btn-spinner');
             const resContainer = document.getElementById('result-container');
@@ -542,15 +566,25 @@ DASHBOARD_HTML = """
             spinner.style.display = 'block';
             resContainer.style.display = 'none';
 
-            // Extract form inputs to build the JSON
-            const profession = document.getElementById('profession').value;
+            const profSelect = document.getElementById('profession');
+            const profession = profSelect.value;
+            const professionText = profSelect.options[profSelect.selectedIndex].text;
+            
             const desc = document.getElementById('description').value;
             const pCount = parseInt(document.getElementById('portfolio_count').value);
             const hasVid = document.getElementById('has_video').value === 'true';
+            
+            // Récupère le nombre de documents d'appui
+            const docsCount = parseInt(document.getElementById('docs_count').value);
 
-            // Construire un "fake" MediaAsset array
+            // Mock Data
             const images = Array(pCount).fill(0).map((_, i) => ({
                 id: `img_${i}`, url: `http://dummy.com/${i}.jpg`, media_type: "image", mime_type: "image/jpeg", size_bytes: 1024
+            }));
+            
+            // Mock Documents
+            const documents = Array(docsCount).fill(0).map((_, i) => ({
+                id: `doc_${i}`, url: `http://dummy.com/doc_${i}.pdf`, media_type: "document", mime_type: "application/pdf", size_bytes: 2048
             }));
             
             let video = null;
@@ -566,17 +600,16 @@ DASHBOARD_HTML = """
                     description: desc,
                     years_of_experience: 5,
                     location: "Douala",
-                    services_offered: ["Service 1", "Service 2"],
-                    declared_skills: ["Compétence 1"],
+                    services_offered: ["Service"],
+                    declared_skills: ["Compétence"],
                     languages: ["Français"]
                 },
                 presentation_video: video,
                 portfolio_images: images,
-                documents: []
+                documents: documents // ← IMPORTANT: On injecte bien les documents pour l'API
             };
 
             try {
-                // Fetch to real API
                 const response = await fetch('/api/v1/analysis/submit', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -585,7 +618,7 @@ DASHBOARD_HTML = """
                 
                 const data = await response.json();
                 
-                // Mettre à jour l'UI avec les data !
+                // Mettre à jour l'UI avec les data
                 document.getElementById('final-score').innerText = data.trust_score.toFixed(1);
                 
                 // Animation du cercle CSS
@@ -593,28 +626,32 @@ DASHBOARD_HTML = """
                 const scorePerc = data.trust_score + '%';
                 circle.style.setProperty('--percentage', scorePerc);
                 
-                // Couleurs basées sur le score
                 if(data.trust_score >= 80) circle.style.background = `conic-gradient(var(--success) ${scorePerc}, rgba(255,255,255,0.1) 0)`;
                 else if (data.trust_score >= 50) circle.style.background = `conic-gradient(var(--warning) ${scorePerc}, rgba(255,255,255,0.1) 0)`;
                 else circle.style.background = `conic-gradient(var(--danger) ${scorePerc}, rgba(255,255,255,0.1) 0)`;
 
                 document.getElementById('trust-level').innerText = data.trust_level;
-                // document.getElementById('trust-level').style.color = (data.trust_score >= 60) ? 'var(--success)' : 'var(--warning)';
-
                 document.getElementById('ai-confidence').innerText = `Certitude IA: ${data.ai_confidence_level.replace('_', ' ')}`;
+                document.getElementById('res-prof').innerText = professionText;
 
                 document.getElementById('skill-score').innerText = `${data.skill_evidence_score.toFixed(1)} / 100`;
                 document.getElementById('evidence-score').innerText = `${data.evidence_index.toFixed(1)} / 100`;
                 document.getElementById('profile-score').innerText = `${data.profile_quality_score.toFixed(1)} / 100`;
                 document.getElementById('fraud-score').innerText = `${data.fraud_risk_index.toFixed(1)} / 100`;
                 
-                document.getElementById('ai-rec').innerText = `🤖 RECOMMANDATION IA:\n\n${data.ai_recommendation}`;
+                // Afficher visuellement si des documents ont été évalués et ont boosté le projet
+                if(docsCount > 0) {
+                    document.getElementById('document-bonus-text').innerText = `${docsCount} Documents Authentifiés ✔️`;
+                } else {
+                    document.getElementById('document-bonus-text').innerText = `Aucun Doc (Non requis) ➖`;
+                }
+
+                document.getElementById('ai-rec').innerText = `🤖 EXPLICATION IA:\n\n${data.ai_recommendation}`;
                 
-                // Show container with animation
                 resContainer.style.display = 'block';
 
             } catch (err) {
-                alert("Erreur lors de l'appel à l'API JITSE: " + err.message);
+                alert("Erreur: " + err.message);
             } finally {
                 btnText.style.display = 'inline';
                 spinner.style.display = 'none';
