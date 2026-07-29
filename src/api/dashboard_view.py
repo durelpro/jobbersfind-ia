@@ -537,6 +537,11 @@ DASHBOARD_HTML = """
         let statePhotos = 0;
         let stateDocs = 0;
         let hasVideo = false;
+        
+        // Stockage réel des fichiers selectionnés
+        let globalPhotosFiles = [];
+        let globalDocsFiles = [];
+        let globalVideoFile = null;
 
         function showView(viewId) {
             document.querySelectorAll('nav a').forEach(a => a.classList.remove('active'));
@@ -552,18 +557,19 @@ DASHBOARD_HTML = """
         function previewImages(event) {
             const preview = document.getElementById('image-preview');
             preview.innerHTML = '';
-            const files = event.target.files;
-            statePhotos = files.length;
             
-            for(let i=0; i<files.length; i++) {
+            globalPhotosFiles = Array.from(event.target.files);
+            statePhotos = globalPhotosFiles.length;
+            
+            for(let i=0; i<globalPhotosFiles.length; i++) {
                 const img = document.createElement('img');
-                img.src = URL.createObjectURL(files[i]);
+                img.src = URL.createObjectURL(globalPhotosFiles[i]);
                 const div = document.createElement('div');
                 div.className = 'file-item';
                 div.appendChild(img);
                 
                 const span = document.createElement('span');
-                span.innerText = files[i].name.substring(0, 10) + '...';
+                span.innerText = globalPhotosFiles[i].name.substring(0, 15) + (globalPhotosFiles[i].name.length > 15 ? '...' : '');
                 div.appendChild(span);
                 
                 preview.appendChild(div);
@@ -574,10 +580,11 @@ DASHBOARD_HTML = """
         function previewDocs(event) {
             const preview = document.getElementById('docs-preview');
             preview.innerHTML = '';
-            const files = event.target.files;
-            stateDocs = files.length;
             
-            for(let i=0; i<files.length; i++) {
+            globalDocsFiles = Array.from(event.target.files);
+            stateDocs = globalDocsFiles.length;
+            
+            for(let i=0; i<globalDocsFiles.length; i++) {
                 const div = document.createElement('div');
                 div.className = 'file-item';
                 
@@ -587,7 +594,7 @@ DASHBOARD_HTML = """
                 div.appendChild(icon);
                 
                 const span = document.createElement('span');
-                span.innerText = files[i].name;
+                span.innerText = globalDocsFiles[i].name;
                 div.appendChild(span);
                 
                 preview.appendChild(div);
@@ -602,6 +609,7 @@ DASHBOARD_HTML = """
             
             if(files.length > 0) {
                 hasVideo = true;
+                globalVideoFile = files[0];
                 const div = document.createElement('div');
                 div.className = 'file-item';
                 
@@ -617,6 +625,7 @@ DASHBOARD_HTML = """
                 preview.appendChild(div);
             } else {
                 hasVideo = false;
+                globalVideoFile = null;
             }
         }
 
@@ -641,19 +650,25 @@ DASHBOARD_HTML = """
             
             const desc = document.getElementById('description').value;
 
-            // Structure des images ajoutées via FileReader
-            const images = Array(statePhotos).fill(0).map((_, i) => ({
-                id: `img_${i}`, url: `http://simulated-upload.com/visuel_${i}.jpg`, media_type: "image", mime_type: "image/jpeg", size_bytes: 1024
+            // Encodage des NOMS RÉELS de fichiers pour permettre au backend (Agent Vision) 
+            // de vérifier et d'associer la sémantique de l'image.
+            const images = globalPhotosFiles.map((file, i) => ({
+                id: `img_${i}`, url: `http://simulated-upload.com/${encodeURIComponent(file.name)}`, media_type: "image", mime_type: file.type || "image/jpeg", size_bytes: file.size || 1024
             }));
             
-            // Structure des documents via FileReader
-            const documents = Array(stateDocs).fill(0).map((_, i) => ({
-                id: `doc_${i}`, url: `http://simulated-upload.com/doc_${i}.pdf`, media_type: "document", mime_type: "application/pdf", size_bytes: 2048
+            const documents = globalDocsFiles.map((file, i) => ({
+                id: `doc_${i}`, url: `http://simulated-upload.com/${encodeURIComponent(file.name)}`, media_type: "document", mime_type: file.type || "application/pdf", size_bytes: file.size || 2048
             }));
             
             let video = null;
-            if (hasVideo) {
-                video = {id: `vid_1`, url: `http://simulated-upload.com/chantier_01.mp4`, media_type: "video", mime_type: "video/mp4", size_bytes: 5048};
+            if (hasVideo && globalVideoFile) {
+                video = {
+                    id: `vid_1`, 
+                    url: `http://simulated-upload.com/${encodeURIComponent(globalVideoFile.name)}`, 
+                    media_type: "video", 
+                    mime_type: globalVideoFile.type || "video/mp4", 
+                    size_bytes: globalVideoFile.size || 5048
+                };
             }
 
             const payload = {
