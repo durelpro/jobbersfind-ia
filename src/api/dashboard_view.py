@@ -749,7 +749,7 @@ DASHBOARD_HTML = """
             const data = await res.json();
             
             if (!res.ok) {
-                msgDiv.innerHTML = `<span style="color:var(--danger)">${data.detail || 'Erreur lors de l\'inscription'}</span>`;
+                msgDiv.innerHTML = `<span style="color:var(--danger)">${data.detail || 'Erreur lors de l'inscription'}</span>`;
             } else {
                 msgDiv.innerHTML = `<span style="color:var(--success)">${data.message || 'Inscription réussie !'}</span>`;
             }
