@@ -99,7 +99,6 @@ DASHBOARD_HTML = """
         #app-layout {
             display: none; /* Hidden until logged in */
             width: 100%;
-            
         }
 
         .sidebar {
@@ -477,7 +476,6 @@ DASHBOARD_HTML = """
         </div>
     </div>
 
-
     <!-- APP LAYOUT -->
     <div id="app-layout">
         <aside class="sidebar">
@@ -542,7 +540,6 @@ DASHBOARD_HTML = """
                 </ul>
             </section>
             
-            
             <!-- VIEW: ACCOUNT CONFIG -->
             <section id="view-account" class="glass-panel">
                 <div class="section-title">
@@ -559,7 +556,6 @@ DASHBOARD_HTML = """
                     <button class="btn" onclick="changePassword()">Mettre à jour</button>
                 </div>
             </section>
-
 
             <!-- VIEW: Simulateur -->
             <section id="view-simulator" class="glass-panel" style="display: block;">
@@ -696,390 +692,389 @@ DASHBOARD_HTML = """
         </main>
     </div>
 
-   <script>
-    // --- IAM & AUTH LOGIC ---
-    let session = null; // { email, role, token }
+    <script>
+        // --- IAM & AUTH LOGIC ---
+        let session = null; // { email, role, token }
 
-    function switchAuthTab(tab) {
-        document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-        const activeTab = document.getElementById('tab-' + tab);
-        if (activeTab) activeTab.classList.add('active');
-        
-        document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
-        document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
-    }
-
-    async function doLogin() {
-        const email = document.getElementById('login-email').value;
-        const pwd = document.getElementById('login-pwd').value;
-        const errDiv = document.getElementById('login-error');
-        
-        try {
-            const res = await fetch('/api/v1/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: email, password: pwd })
-            });
-            const data = await res.json();
+        function switchAuthTab(tab) {
+            document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+            const activeTab = document.getElementById('tab-' + tab);
+            if (activeTab) activeTab.classList.add('active');
             
-            if (!res.ok) {
-                errDiv.innerText = data.detail || "Échec de connexion.";
-                errDiv.style.display = 'block';
-            } else {
-                session = data.session; // Contient email, role et optionnellement token
-                initApp();
-            }
-        } catch (e) {
-            errDiv.innerText = "Erreur serveur.";
-            errDiv.style.display = 'block';
+            document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
+            document.getElementById('form-register').style.display = tab === 'register' ? 'block' : 'none';
         }
-    }
 
-    async function doRegister() {
-        const email = document.getElementById('reg-email').value;
-        const pwd = document.getElementById('reg-pwd').value;
-        const msgDiv = document.getElementById('reg-msg');
-        
-        try {
-            const res = await fetch('/api/v1/auth/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: email, password: pwd })
-            });
-            const data = await res.json();
+        async function doLogin() {
+            const email = document.getElementById('login-email').value;
+            const pwd = document.getElementById('login-pwd').value;
+            const errDiv = document.getElementById('login-error');
             
-            if (!res.ok) {
-                msgDiv.innerHTML = `<span style="color:var(--danger)">${data.detail || 'Erreur lors de l'inscription'}</span>`;
-            } else {
-                msgDiv.innerHTML = `<span style="color:var(--success)">${data.message || 'Inscription réussie !'}</span>`;
-            }
-            msgDiv.style.display = 'block';
-        } catch (e) {
-            msgDiv.innerHTML = `<span style="color:var(--danger)">Erreur serveur.</span>`;
-            msgDiv.style.display = 'block';
-        }
-    }
-
-    function logout() {
-        session = null;
-        document.getElementById('app-layout').style.display = 'none';
-        document.getElementById('auth-screen').style.display = 'flex';
-        
-        document.getElementById('login-email').value = '';
-        document.getElementById('login-pwd').value = '';
-        document.getElementById('login-error').style.display = 'none';
-    }
-
-    async function changePassword() {
-        const newPwd = document.getElementById('new-pwd').value;
-        const msgDiv = document.getElementById('pwd-msg');
-        
-        if (!newPwd || newPwd.length < 4) {
-            return alert('Mot de passe trop court (4 caractères minimum).');
-        }
-        
-        try {
-            const headers = { 'Content-Type': 'application/json' };
-            if (session && session.token) {
-                headers['Authorization'] = `Bearer ${session.token}`;
-            }
-
-            const res = await fetch('/api/v1/auth/users/change-password', {
-                method: 'POST',
-                headers: headers,
-                body: JSON.stringify({ email: session.email, password: newPwd })
-            });
-            
-            if (res.ok) {
-                msgDiv.innerHTML = `<span style="color:var(--success)">Mot de passe changé !</span>`;
-                document.getElementById('new-pwd').value = '';
-            } else {
+            try {
+                const res = await fetch('/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email, password: pwd })
+                });
                 const data = await res.json();
-                msgDiv.innerHTML = `<span style="color:var(--danger)">${data.detail || 'Erreur.'}</span>`;
+                
+                if (!res.ok) {
+                    errDiv.innerText = data.detail || "Échec de connexion.";
+                    errDiv.style.display = 'block';
+                } else {
+                    session = data.session;
+                    initApp();
+                }
+            } catch (e) {
+                errDiv.innerText = "Erreur serveur.";
+                errDiv.style.display = 'block';
             }
-        } catch (e) {
-            msgDiv.innerHTML = `<span style="color:var(--danger)">Erreur réseau.</span>`;
         }
-    }
 
-    async function loadPendingUsers() {
-        const list = document.getElementById('pending-users-list');
-        list.innerHTML = '<li><span style="color:var(--text-muted);">Chargement...</span></li>';
+        async function doRegister() {
+            const email = document.getElementById('reg-email').value;
+            const pwd = document.getElementById('reg-pwd').value;
+            const msgDiv = document.getElementById('reg-msg');
+            
+            try {
+                const res = await fetch('/api/v1/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email, password: pwd })
+                });
+                const data = await res.json();
+                
+                if (!res.ok) {
+                    msgDiv.innerHTML = `<span style="color:var(--danger)">${data.detail || "Erreur lors de l'inscription"}</span>`;
+                } else {
+                    msgDiv.innerHTML = `<span style="color:var(--success)">${data.message || 'Inscription réussie !'}</span>`;
+                }
+                msgDiv.style.display = 'block';
+            } catch (e) {
+                msgDiv.innerHTML = `<span style="color:var(--danger)">Erreur serveur.</span>`;
+                msgDiv.style.display = 'block';
+            }
+        }
+
+        function logout() {
+            session = null;
+            document.getElementById('app-layout').style.display = 'none';
+            document.getElementById('auth-screen').style.display = 'flex';
+            
+            document.getElementById('login-email').value = '';
+            document.getElementById('login-pwd').value = '';
+            document.getElementById('login-error').style.display = 'none';
+        }
+
+        async function changePassword() {
+            const newPwd = document.getElementById('new-pwd').value;
+            const msgDiv = document.getElementById('pwd-msg');
+            
+            if (!newPwd || newPwd.length < 4) {
+                return alert('Mot de passe trop court (4 caractères minimum).');
+            }
+            
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (session && session.token) {
+                    headers['Authorization'] = `Bearer ${session.token}`;
+                }
+
+                const res = await fetch('/api/v1/auth/users/change-password', {
+                    method: 'POST',
+                    headers: headers,
+                    body: JSON.stringify({ email: session.email, password: newPwd })
+                });
+                
+                if (res.ok) {
+                    msgDiv.innerHTML = `<span style="color:var(--success)">Mot de passe changé !</span>`;
+                    document.getElementById('new-pwd').value = '';
+                } else {
+                    const data = await res.json();
+                    msgDiv.innerHTML = `<span style="color:var(--danger)">${data.detail || 'Erreur.'}</span>`;
+                }
+            } catch (e) {
+                msgDiv.innerHTML = `<span style="color:var(--danger)">Erreur réseau.</span>`;
+            }
+        }
+
+        async function loadPendingUsers() {
+            const list = document.getElementById('pending-users-list');
+            list.innerHTML = '<li><span style="color:var(--text-muted);">Chargement...</span></li>';
+            
+            try {
+                const headers = {};
+                if (session && session.token) {
+                    headers['Authorization'] = `Bearer ${session.token}`;
+                }
+
+                const res = await fetch('/api/v1/auth/users/pending', { headers });
+                const data = await res.json();
+                
+                if (!data.pending_users || data.pending_users.length === 0) {
+                    list.innerHTML = '<li><span style="color:var(--success);"><i class="fa-solid fa-check"></i> Aucun utilisateur en attente d\'approbation.</span></li>';
+                    return;
+                }
+                
+                list.innerHTML = '';
+                data.pending_users.forEach(user => {
+                    const li = document.createElement('li');
+                    
+                    const bold = document.createElement('b');
+                    bold.style.fontSize = '1.1rem';
+                    bold.textContent = user.email;
+                    
+                    const btn = document.createElement('button');
+                    btn.className = 'btn-approve';
+                    btn.innerHTML = '<i class="fa-solid fa-check-double"></i> Approuver';
+                    btn.onclick = () => approveUser(user.email);
+                    
+                    li.appendChild(bold);
+                    li.appendChild(btn);
+                    list.appendChild(li);
+                });
+            } catch (e) {
+                list.innerHTML = '<li><span style="color:var(--danger);">Erreur lors du chargement.</span></li>';
+            }
+        }
         
-        try {
-            const headers = {};
-            if (session && session.token) {
-                headers['Authorization'] = `Bearer ${session.token}`;
-            }
+        async function approveUser(email) {
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (session && session.token) {
+                    headers['Authorization'] = `Bearer ${session.token}`;
+                }
 
-            const res = await fetch('/api/v1/auth/users/pending', { headers });
-            const data = await res.json();
-            
-            if (!data.pending_users || data.pending_users.length === 0) {
-                list.innerHTML = '<li><span style="color:var(--success);"><i class="fa-solid fa-check"></i> Aucun utilisateur en attente d\'approbation.</span></li>';
-                return;
+                const res = await fetch(`/api/v1/auth/users/approve/${encodeURIComponent(email)}`, { 
+                    method: 'POST',
+                    headers: headers 
+                });
+
+                if (res.ok) {
+                    alert(`Utilisateur ${email} approuvé ! Il peut désormais se connecter.`);
+                    loadPendingUsers();
+                } else {
+                    alert(`Impossible d'approuver l'utilisateur.`);
+                }
+            } catch (e) {
+                alert(`Erreur réseau lors de l'approbation.`);
             }
-            
-            list.innerHTML = '';
-            data.pending_users.forEach(user => {
-                const li = document.createElement('li');
-                
-                const bold = document.createElement('b');
-                bold.style.fontSize = '1.1rem';
-                bold.textContent = user.email;
-                
-                const btn = document.createElement('button');
-                btn.className = 'btn-approve';
-                btn.innerHTML = '<i class="fa-solid fa-check-double"></i> Approuver';
-                btn.onclick = () => approveUser(user.email);
-                
-                li.appendChild(bold);
-                li.appendChild(btn);
-                list.appendChild(li);
-            });
-        } catch (e) {
-            list.innerHTML = '<li><span style="color:var(--danger);">Erreur lors du chargement.</span></li>';
         }
-    }
-    
-    async function approveUser(email) {
-        try {
-            const headers = { 'Content-Type': 'application/json' };
-            if (session && session.token) {
-                headers['Authorization'] = `Bearer ${session.token}`;
-            }
 
-            const res = await fetch(`/api/v1/auth/users/approve/${encodeURIComponent(email)}`, { 
-                method: 'POST',
-                headers: headers 
-            });
-
-            if (res.ok) {
-                alert(`Utilisateur ${email} approuvé ! Il peut désormais se connecter.`);
+        // --- UI LOGIC ---
+        function initApp() {
+            document.getElementById('auth-screen').style.display = 'none';
+            document.getElementById('app-layout').style.display = 'flex';
+            document.getElementById('current-user-email').innerText = session.email;
+            
+            if (session.role === 'admin') {
+                document.getElementById('nav-admin').style.display = 'flex';
+                showView('admin');
                 loadPendingUsers();
             } else {
-                alert(`Impossible d'approuver l'utilisateur.`);
+                document.getElementById('nav-admin').style.display = 'none';
+                showView('simulator');
             }
-        } catch (e) {
-            alert(`Erreur réseau lors de l'approbation.`);
-        }
-    }
-
-    // --- UI LOGIC ---
-    function initApp() {
-        document.getElementById('auth-screen').style.display = 'none';
-        document.getElementById('app-layout').style.display = 'flex';
-        document.getElementById('current-user-email').innerText = session.email;
-        
-        if (session.role === 'admin') {
-            document.getElementById('nav-admin').style.display = 'flex';
-            showView('admin');
-            loadPendingUsers();
-        } else {
-            document.getElementById('nav-admin').style.display = 'none';
-            showView('simulator');
-        }
-    }
-
-    function showView(viewId) {
-        document.querySelectorAll('.glass-panel').forEach(p => p.style.display = 'none');
-        
-        const targetView = document.getElementById('view-' + viewId);
-        if (targetView) targetView.style.display = 'block';
-        
-        document.querySelectorAll('nav .nav-item').forEach(a => a.classList.remove('active'));
-        const activeNav = document.getElementById('nav-' + viewId);
-        if (activeNav) activeNav.classList.add('active');
-    }
-
-    // --- SIMULATOR LOGIC (File Reading) ---
-    let statePhotos = 0, stateDocs = 0, hasVideo = false;
-    let globalPhotosFiles = [], globalDocsFiles = [], globalVideoFile = null;
-
-    function previewImages(event) {
-        const preview = document.getElementById('image-preview');
-        preview.innerHTML = '';
-        globalPhotosFiles = Array.from(event.target.files);
-        statePhotos = globalPhotosFiles.length;
-        
-        globalPhotosFiles.forEach(f => {
-            const img = document.createElement('img');
-            img.src = URL.createObjectURL(f);
-            img.onload = () => URL.revokeObjectURL(img.src);
-            
-            const div = document.createElement('div');
-            div.className = 'file-item';
-            div.appendChild(img);
-            
-            const span = document.createElement('span');
-            span.textContent = f.name.length > 15 ? f.name.substring(0, 15) + '...' : f.name;
-            
-            div.appendChild(span);
-            preview.appendChild(div);
-        });
-    }
-
-    function previewDocs(event) {
-        const preview = document.getElementById('docs-preview');
-        preview.innerHTML = '';
-        globalDocsFiles = Array.from(event.target.files);
-        stateDocs = globalDocsFiles.length;
-        
-        globalDocsFiles.forEach(f => {
-            const div = document.createElement('div');
-            div.className = 'file-item';
-            
-            const icon = document.createElement('i');
-            icon.className = 'fa-solid fa-file-pdf';
-            icon.style.color = 'var(--secondary)';
-            
-            const span = document.createElement('span');
-            span.textContent = f.name;
-            
-            div.appendChild(icon);
-            div.appendChild(span);
-            preview.appendChild(div);
-        });
-    }
-
-    function previewVideo(event) {
-        const preview = document.getElementById('video-preview');
-        preview.innerHTML = '';
-        const files = event.target.files;
-        
-        if (files.length > 0) {
-            hasVideo = true;
-            globalVideoFile = files[0];
-            
-            const div = document.createElement('div');
-            div.className = 'file-item';
-            
-            const icon = document.createElement('i');
-            icon.className = 'fa-solid fa-video';
-            icon.style.color = 'var(--success)';
-            
-            const span = document.createElement('span');
-            span.textContent = files[0].name;
-            
-            div.appendChild(icon);
-            div.appendChild(span);
-            preview.appendChild(div);
-        } else {
-            hasVideo = false;
-            globalVideoFile = null;
-        }
-    }
-
-    async function submitAnalysis() {
-        if (statePhotos === 0) {
-            if (!confirm("⚠️ Vous n'avez ajouté aucune photo à votre portfolio ! Continuer quand même ?")) return;
         }
 
-        const btnText = document.getElementById('btn-text');
-        const spinner = document.getElementById('btn-spinner');
-        const resContainer = document.getElementById('result-container');
-        
-        btnText.style.display = 'none';
-        spinner.style.display = 'inline-block';
-        resContainer.style.display = 'none';
-
-        const profession = document.getElementById('profession').value;
-        const desc = document.getElementById('description').value;
-
-        // Fichiers encodés pour simuler le comportement Multimodal Backend
-        const images = globalPhotosFiles.map((file, i) => ({
-            id: `img_${i}`, 
-            url: `http://simulated-upload.com/${encodeURIComponent(file.name)}`, 
-            media_type: "image", 
-            mime_type: file.type || "image/jpeg", 
-            size_bytes: file.size || 1024
-        }));
-        
-        const documents = globalDocsFiles.map((file, i) => ({
-            id: `doc_${i}`, 
-            url: `http://simulated-upload.com/${encodeURIComponent(file.name)}`, 
-            media_type: "document", 
-            mime_type: file.type || "application/pdf", 
-            size_bytes: file.size || 2048
-        }));
-        
-        let video = null;
-        if (hasVideo && globalVideoFile) {
-            video = { 
-                id: `vid_1`, 
-                url: `http://simulated-upload.com/${encodeURIComponent(globalVideoFile.name)}`, 
-                media_type: "video", 
-                mime_type: globalVideoFile.type || "video/mp4", 
-                size_bytes: globalVideoFile.size || 5048 
-            };
+        function showView(viewId) {
+            document.querySelectorAll('.glass-panel').forEach(p => p.style.display = 'none');
+            
+            const targetView = document.getElementById('view-' + viewId);
+            if (targetView) targetView.style.display = 'block';
+            
+            document.querySelectorAll('nav .nav-item').forEach(a => a.classList.remove('active'));
+            const activeNav = document.getElementById('nav-' + viewId);
+            if (activeNav) activeNav.classList.add('active');
         }
 
-        const payload = {
-            dossier_id: "DOS-" + Math.floor(Math.random() * 10000), 
-            provider_id: session ? session.email : "guest",
-            profession_category: profession, 
-            profile: { 
-                description: desc, 
-                years_of_experience: 5, 
-                location: "Douala", 
-                services_offered: ["Service"], 
-                declared_skills: [], 
-                languages: ["FR"] 
-            },
-            presentation_video: video, 
-            portfolio_images: images, 
-            documents: documents
-        };
+        // --- SIMULATOR LOGIC (File Reading) ---
+        let statePhotos = 0, stateDocs = 0, hasVideo = false;
+        let globalPhotosFiles = [], globalDocsFiles = [], globalVideoFile = null;
 
-        try {
-            const headers = { 'Content-Type': 'application/json' };
-            if (session && session.token) {
-                headers['Authorization'] = `Bearer ${session.token}`;
-            }
-
-            const response = await fetch('/api/v1/analysis/submit', { 
-                method: 'POST', 
-                headers: headers, 
-                body: JSON.stringify(payload) 
+        function previewImages(event) {
+            const preview = document.getElementById('image-preview');
+            preview.innerHTML = '';
+            globalPhotosFiles = Array.from(event.target.files);
+            statePhotos = globalPhotosFiles.length;
+            
+            globalPhotosFiles.forEach(f => {
+                const img = document.createElement('img');
+                img.src = URL.createObjectURL(f);
+                img.onload = () => URL.revokeObjectURL(img.src);
+                
+                const div = document.createElement('div');
+                div.className = 'file-item';
+                div.appendChild(img);
+                
+                const span = document.createElement('span');
+                span.textContent = f.name.length > 15 ? f.name.substring(0, 15) + '...' : f.name;
+                
+                div.appendChild(span);
+                preview.appendChild(div);
             });
+        }
+
+        function previewDocs(event) {
+            const preview = document.getElementById('docs-preview');
+            preview.innerHTML = '';
+            globalDocsFiles = Array.from(event.target.files);
+            stateDocs = globalDocsFiles.length;
             
-            if (!response.ok) throw new Error(`Erreur serveur (${response.status})`);
+            globalDocsFiles.forEach(f => {
+                const div = document.createElement('div');
+                div.className = 'file-item';
+                
+                const icon = document.createElement('i');
+                icon.className = 'fa-solid fa-file-pdf';
+                icon.style.color = 'var(--secondary)';
+                
+                const span = document.createElement('span');
+                span.textContent = f.name;
+                
+                div.appendChild(icon);
+                div.appendChild(span);
+                preview.appendChild(div);
+            });
+        }
+
+        function previewVideo(event) {
+            const preview = document.getElementById('video-preview');
+            preview.innerHTML = '';
+            const files = event.target.files;
             
-            const data = await response.json();
-            
-            document.getElementById('final-score').innerText = data.trust_score.toFixed(1);
-            
-            const circleScore = document.getElementById('circle-score');
-            circleScore.style.setProperty('--percentage', data.trust_score + '%');
-            
-            if (data.trust_score >= 80) {
-                circleScore.style.background = `conic-gradient(var(--success) ${data.trust_score}%, rgba(255,255,255,0.1) 0)`;
-            } else if (data.trust_score >= 50) {
-                circleScore.style.background = `conic-gradient(var(--warning) ${data.trust_score}%, rgba(255,255,255,0.1) 0)`;
+            if (files.length > 0) {
+                hasVideo = true;
+                globalVideoFile = files[0];
+                
+                const div = document.createElement('div');
+                div.className = 'file-item';
+                
+                const icon = document.createElement('i');
+                icon.className = 'fa-solid fa-video';
+                icon.style.color = 'var(--success)';
+                
+                const span = document.createElement('span');
+                span.textContent = files[0].name;
+                
+                div.appendChild(icon);
+                div.appendChild(span);
+                preview.appendChild(div);
             } else {
-                circleScore.style.background = `conic-gradient(var(--danger) ${data.trust_score}%, rgba(255,255,255,0.1) 0)`;
+                hasVideo = false;
+                globalVideoFile = null;
+            }
+        }
+
+        async function submitAnalysis() {
+            if (statePhotos === 0) {
+                if (!confirm("⚠️ Vous n'avez ajouté aucune photo à votre portfolio ! Continuer quand même ?")) return;
             }
 
-            document.getElementById('trust-level').innerText = data.trust_level;
-            document.getElementById('ai-confidence').innerText = `Certitude IA: ${(data.ai_confidence_level || '').replace('_', ' ')}`;
+            const btnText = document.getElementById('btn-text');
+            const spinner = document.getElementById('btn-spinner');
+            const resContainer = document.getElementById('result-container');
+            
+            btnText.style.display = 'none';
+            spinner.style.display = 'inline-block';
+            resContainer.style.display = 'none';
 
-            document.getElementById('skill-score').innerText = `${data.skill_evidence_score.toFixed(1)} / 100`;
-            document.getElementById('evidence-score').innerText = `${data.evidence_index.toFixed(1)} / 100`;
-            document.getElementById('profile-score').innerText = `${data.profile_quality_score.toFixed(1)} / 100`;
-            document.getElementById('fraud-score').innerText = `${data.fraud_risk_index.toFixed(1)} / 100`;
+            const profession = document.getElementById('profession').value;
+            const desc = document.getElementById('description').value;
+
+            const images = globalPhotosFiles.map((file, i) => ({
+                id: `img_${i}`, 
+                url: `http://simulated-upload.com/${encodeURIComponent(file.name)}`, 
+                media_type: "image", 
+                mime_type: file.type || "image/jpeg", 
+                size_bytes: file.size || 1024
+            }));
             
-            document.getElementById('document-bonus-text').innerText = stateDocs > 0 ? `${stateDocs} Documents Approuvés ✔️` : `Aucun (Neutre) ➖`;
-            document.getElementById('ai-rec').innerText = `🤖 EXPLICATION IA:\n\n${data.ai_recommendation}`;
+            const documents = globalDocsFiles.map((file, i) => ({
+                id: `doc_${i}`, 
+                url: `http://simulated-upload.com/${encodeURIComponent(file.name)}`, 
+                media_type: "document", 
+                mime_type: file.type || "application/pdf", 
+                size_bytes: file.size || 2048
+            }));
             
-            resContainer.style.display = 'block';
-        } catch (err) { 
-            alert("Erreur: " + err.message); 
-        } finally { 
-            btnText.style.display = 'inline'; 
-            spinner.style.display = 'none'; 
+            let video = null;
+            if (hasVideo && globalVideoFile) {
+                video = { 
+                    id: `vid_1`, 
+                    url: `http://simulated-upload.com/${encodeURIComponent(globalVideoFile.name)}`, 
+                    media_type: "video", 
+                    mime_type: globalVideoFile.type || "video/mp4", 
+                    size_bytes: globalVideoFile.size || 5048 
+                };
+            }
+
+            const payload = {
+                dossier_id: "DOS-" + Math.floor(Math.random() * 10000), 
+                provider_id: session ? session.email : "guest",
+                profession_category: profession, 
+                profile: { 
+                    description: desc, 
+                    years_of_experience: 5, 
+                    location: "Douala", 
+                    services_offered: ["Service"], 
+                    declared_skills: [], 
+                    languages: ["FR"] 
+                },
+                presentation_video: video, 
+                portfolio_images: images, 
+                documents: documents
+            };
+
+            try {
+                const headers = { 'Content-Type': 'application/json' };
+                if (session && session.token) {
+                    headers['Authorization'] = `Bearer ${session.token}`;
+                }
+
+                const response = await fetch('/api/v1/analysis/submit', { 
+                    method: 'POST', 
+                    headers: headers, 
+                    body: JSON.stringify(payload) 
+                });
+                
+                if (!response.ok) throw new Error(`Erreur serveur (${response.status})`);
+                
+                const data = await response.json();
+                
+                document.getElementById('final-score').innerText = data.trust_score.toFixed(1);
+                
+                const circleScore = document.getElementById('circle-score');
+                circleScore.style.setProperty('--percentage', data.trust_score + '%');
+                
+                if (data.trust_score >= 80) {
+                    circleScore.style.background = `conic-gradient(var(--success) ${data.trust_score}%, rgba(255,255,255,0.1) 0)`;
+                } else if (data.trust_score >= 50) {
+                    circleScore.style.background = `conic-gradient(var(--warning) ${data.trust_score}%, rgba(255,255,255,0.1) 0)`;
+                } else {
+                    circleScore.style.background = `conic-gradient(var(--danger) ${data.trust_score}%, rgba(255,255,255,0.1) 0)`;
+                }
+
+                document.getElementById('trust-level').innerText = data.trust_level;
+                document.getElementById('ai-confidence').innerText = `Certitude IA: ${(data.ai_confidence_level || '').replace('_', ' ')}`;
+
+                document.getElementById('skill-score').innerText = `${data.skill_evidence_score.toFixed(1)} / 100`;
+                document.getElementById('evidence-score').innerText = `${data.evidence_index.toFixed(1)} / 100`;
+                document.getElementById('profile-score').innerText = `${data.profile_quality_score.toFixed(1)} / 100`;
+                document.getElementById('fraud-score').innerText = `${data.fraud_risk_index.toFixed(1)} / 100`;
+                
+                document.getElementById('document-bonus-text').innerText = stateDocs > 0 ? `${stateDocs} Documents Approuvés ✔️` : `Aucun (Neutre) ➖`;
+                document.getElementById('ai-rec').innerText = `🤖 EXPLICATION IA:\n\n${data.ai_recommendation}`;
+                
+                resContainer.style.display = 'block';
+            } catch (err) { 
+                alert("Erreur: " + err.message); 
+            } finally { 
+                btnText.style.display = 'inline'; 
+                spinner.style.display = 'none'; 
+            }
         }
-    }
-</script>
+    </script>
 </body>
 </html>
 """
